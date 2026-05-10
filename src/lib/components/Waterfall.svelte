@@ -19,7 +19,7 @@
   {#each images as img (img.id)}
     <button
       onclick={() => onUserClick(img.uid)}
-      class="relative aspect-square overflow-hidden rounded-lg hover:ring-2 ring-blue-500 transition-all cursor-pointer group"
+      class="relative aspect-square overflow-hidden rounded-lg hover:ring-2 ring-blue-500 transition-all cursor-pointer"
     >
       <img
         src="/api/uploads/{img.path}"
@@ -27,7 +27,7 @@
         loading="lazy"
         class="w-full h-full object-cover"
       />
-      <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1 pt-4 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity">
+      <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1 pt-4 text-xs text-white opacity-100">
         {shortUid(img.uid)} &middot; {shortTime(img.created_at)}
       </div>
     </button>
