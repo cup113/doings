@@ -1,42 +1,98 @@
-# sv
+# Doings
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A real-time photo-sharing app built with SvelteKit. Snap a photo, share instantly — see everyone's uploads in a live waterfall.
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- Camera capture → compress to 192px WebP → upload
+- Real-time SSE feed — new photos appear instantly
+- Per-user gallery view
+- Bandwidth limiter (2GB/day)
+- Inactivity detection with notification warning
 
-```sh
-# create a new project
-npx sv create my-app
+## Tech Stack
+
+- **Runtime**: Node 22+ with `--experimental-sqlite`
+- **Framework**: SvelteKit 2 + Svelte 5 (SPA mode, `ssr=false`)
+- **Styling**: Tailwind CSS v4 (Vite plugin)
+- **Database**: SQLite via `node:sqlite` (`DatabaseSync`)
+- **Deploy**: Docker → Coolify
+
+## Development
+
+```bash
+pnpm dev          # cross-env NODE_OPTIONS=--experimental-sqlite vite dev
+pnpm build        # same flag, outputs to build/
+pnpm check        # svelte-check (types)
+pnpm lint         # ESLint
 ```
 
-To recreate this project with the same configuration:
+## Docker
 
-```sh
-# recreate this project
-pnpm dlx sv@0.15.3 create --template minimal --types ts --add eslint tailwindcss="plugins:none" sveltekit-adapter="adapter:node" --install pnpm doings
+```bash
+docker compose up --build
 ```
 
-## Developing
+### Environment Variables
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+| Variable | Default | Description |
+|---|---|---|
+| `UPLOADS_DIR` | `uploads` | Image storage directory |
+| `DB_PATH` | `data/doings.db` | SQLite database path |
+| `ORIGIN` | (required) | App origin URL (SvelteKit CSRF) |
+| `BODY_SIZE_LIMIT` | `1048576` | Max upload body size (bytes) |
 
-```sh
-npm run dev
+## Coolify Deployment (Traefik)
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+SSE uses `text/event-stream` for real-time push. **Traefik's compression must exclude this content type** or events will be buffered.
+
+In the Coolify dashboard, go to your application → **Container Labels**:
+
+1. Uncheck **Readonly labels**
+2. Add this line:
+   ```
+   traefik.http.middlewares.gzip.excludedcontenttypes=text/event-stream
+   ```
+3. Save and redeploy
+
+If something breaks, click **Reset Labels to Defaults** and re-enable Readonly labels.
+
+The SSE endpoint also sends `X-Accel-Buffering: no` and `Cache-Control: no-store` headers as additional protection against proxy buffering.
+
+## Project Structure
+
 ```
-
-## Building
-
-To create a production version of your app:
-
-```sh
-npm run build
+src/
+├── hooks.server.ts              Bandwidth middleware
+├── routes/
+│   ├── +layout.svelte           Root layout (favicon, title)
+│   ├── +layout.ts               ssr = false
+│   ├── +page.svelte             Main orchestrator
+│   └── api/
+│       ├── upload/+server.ts    POST upload handler
+│       ├── images/+server.ts    GET all images
+│       ├── images/[uid]/+server.ts  GET user images
+│       ├── events/+server.ts    SSE endpoint
+│       ├── uploads/[...path]/+server.ts  Serve files
+│       └── bandwidth/+server.ts GET bandwidth usage
+├── lib/
+│   ├── server/
+│   │   ├── db.ts                SQLite queries
+│   │   ├── events.ts            EventEmitter for SSE
+│   │   └── bandwidth.ts         Byte counter + daily reset
+│   ├── components/
+│   │   ├── UploadButton.svelte
+│   │   ├── Waterfall.svelte
+│   │   ├── UserGallery.svelte
+│   │   └── InactivityWarning.svelte
+│   ├── utils/
+│   │   ├── identity.ts          nanoid identity
+│   │   ├── compress.ts          Canvas WebP compression
+│   │   └── api.ts               Fetch wrappers
+│   ├── assets/
+│   │   └── favicon.png
+│   └── types.ts
+├── app.html
+├── app.d.ts
+└── layout.css
 ```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
