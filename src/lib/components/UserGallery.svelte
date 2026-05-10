@@ -8,7 +8,7 @@
   } = $props();
 
   function shortUid(uid: string) {
-    return uid.slice(0, 6) + '...';
+    return uid.slice(0, 3);
   }
 
   function shortTime(t: string) {
@@ -26,7 +26,7 @@
 
   <p class="text-sm text-gray-500 mb-3">User: {uid}</p>
 
-  <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
     {#each images as img (img.id)}
       <div class="relative aspect-square overflow-hidden rounded-lg">
         <img

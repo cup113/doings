@@ -53,6 +53,14 @@
     }
   });
 
+  function handleUpload(record: ImageRecord) {
+    images = [record, ...images].slice(0, 10);
+
+    if (record.uid === viewingUser) {
+      userImages = [record, ...userImages].slice(0, 10);
+    }
+  }
+
   function handleUserClick(uid: string) {
     viewingUser = uid;
   }
@@ -67,7 +75,7 @@
     <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
       <h1 class="text-lg font-bold">Doings</h1>
       {#if !viewingUser}
-        <UploadButton />
+        <UploadButton onUpload={handleUpload} />
       {/if}
     </div>
   </header>

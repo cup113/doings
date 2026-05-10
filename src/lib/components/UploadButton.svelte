@@ -1,6 +1,11 @@
 <script lang="ts">
   import { compressImage } from '$lib/utils/compress';
   import { uploadImage } from '$lib/utils/api';
+  import type { ImageRecord } from '$lib/types';
+
+  let { onUpload }: {
+    onUpload?: (record: ImageRecord) => void;
+  } = $props();
 
   let inputEl = $state<HTMLInputElement>();
   let uploading = $state(false);
@@ -17,8 +22,9 @@
     try {
       const compressed = await compressImage(file);
       const uid = localStorage.getItem('doings_uid')!;
-      await uploadImage(compressed, uid);
+      const record = await uploadImage(compressed, uid);
       localStorage.setItem('doings_last_upload', Date.now().toString());
+      onUpload?.(record);
     } catch (e) {
       error = e instanceof Error ? e.message : 'Upload failed';
     } finally {
