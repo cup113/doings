@@ -27,8 +27,9 @@ export function GET({ request }: { request: Request }) {
   return new Response(body, {
     headers: {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
+      'Cache-Control': 'no-store',
       'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
     }
   });
 }
