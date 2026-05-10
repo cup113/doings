@@ -6,6 +6,14 @@
     uid: string;
     onBack: () => void;
   } = $props();
+
+  function shortUid(uid: string) {
+    return uid.slice(0, 6) + '...';
+  }
+
+  function shortTime(t: string) {
+    return new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
 </script>
 
 <div class="p-4">
@@ -13,21 +21,23 @@
     onclick={onBack}
     class="mb-4 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors cursor-pointer"
   >
-    Back
+    &larr; Back
   </button>
 
   <p class="text-sm text-gray-500 mb-3">User: {uid}</p>
 
   <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
     {#each images as img (img.id)}
-      <div class="aspect-square overflow-hidden rounded-lg">
+      <div class="relative aspect-square overflow-hidden rounded-lg group">
         <img
           src="/api/uploads/{img.path}"
           alt=""
           loading="lazy"
           class="w-full h-full object-cover"
         />
-        <p class="text-xs text-gray-400 mt-1">{img.created_at}</p>
+        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1 pt-4 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity">
+          {shortUid(img.uid)} &middot; {shortTime(img.created_at)}
+        </div>
       </div>
     {/each}
   </div>
