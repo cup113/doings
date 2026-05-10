@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - uploads:/app/uploads
+      - data:/app/data
+    environment:
+      - NODE_ENV=production
+      - NODE_OPTIONS=--experimental-sqlite
+      - ORIGIN=http://localhost:3000
+      - BODY_SIZE_LIMIT=1048576
+
+volumes:
+  uploads:
+  data:
