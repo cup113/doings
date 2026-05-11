@@ -50,7 +50,7 @@
 <button
   onclick={triggerUpload}
   disabled={uploading}
-  class="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer"
+  class="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer"
 >
   {uploading ? 'Uploading...' : 'Take Photo'}
 </button>

@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { currentUid } from '$lib/stores/app';
   import type { ImageRecord } from '$lib/types';
+  import RelativeTime from './RelativeTime.svelte';
 
   let { images, onUserClick }: {
     images: ImageRecord[];
@@ -8,10 +10,6 @@
 
   function shortUid(uid: string) {
     return uid.slice(0, 3);
-  }
-
-  function shortTime(t: string) {
-    return new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 </script>
 
@@ -28,7 +26,12 @@
         class="w-full h-full object-cover"
       />
       <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1 pt-4 text-xs text-white opacity-100">
-        {shortUid(img.uid)} &middot; {shortTime(img.created_at)}
+        {#if img.uid === currentUid}
+          <span class="text-cyan-300 font-medium">You</span>
+        {:else}
+          {shortUid(img.uid)}
+        {/if}
+        &middot; <RelativeTime timestamp={img.created_at} />
       </div>
     </button>
   {/each}

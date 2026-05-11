@@ -25,4 +25,5 @@ vite.config.ts.timestamp-*
 # Data
 uploads/
 data/
+*.db
 

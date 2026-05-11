@@ -1,26 +1,23 @@
 <script lang="ts">
   import { untrack } from 'svelte';
-  import { getUid } from '$lib/utils/identity';
+  import { viewingUser, onUploadCallback } from '$lib/stores/app';
+  import { get } from 'svelte/store';
   import { fetchRecentImages, fetchUserImages } from '$lib/utils/api';
   import type { ImageRecord } from '$lib/types';
-  import UploadButton from '$lib/components/UploadButton.svelte';
   import Waterfall from '$lib/components/Waterfall.svelte';
   import UserGallery from '$lib/components/UserGallery.svelte';
   import InactivityWarning from '$lib/components/InactivityWarning.svelte';
 
   let images = $state<ImageRecord[]>([]);
-  let viewingUser = $state<string | null>(null);
   let userImages = $state<ImageRecord[]>([]);
   let viewingUserRef: string | null = null;
-
-  getUid();
 
   $effect(() => {
     fetchRecentImages().then((imgs) => (images = imgs));
   });
 
   $effect(() => {
-    viewingUserRef = viewingUser;
+    viewingUserRef = get(viewingUser);
   });
 
   $effect(() => {
@@ -45,7 +42,7 @@
   });
 
   $effect(() => {
-    const user = viewingUser;
+    const user = get(viewingUser);
     if (user) {
       fetchUserImages(user).then((imgs) => (userImages = imgs));
     } else {
@@ -53,44 +50,30 @@
     }
   });
 
-  function handleUpload(record: ImageRecord) {
+  onUploadCallback.set((record: ImageRecord) => {
     images = [record, ...images].slice(0, 10);
-
-    if (record.uid === viewingUser) {
+    if (record.uid === get(viewingUser)) {
       userImages = [record, ...userImages].slice(0, 10);
     }
-  }
+  });
 
   function handleUserClick(uid: string) {
-    viewingUser = uid;
+    viewingUser.set(uid);
   }
 
   function handleBack() {
-    viewingUser = null;
+    viewingUser.set(null);
   }
 </script>
 
-<div class="min-h-screen bg-gray-50">
-  <header class="sticky top-0 bg-white border-b z-40">
-    <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-      <h1 class="text-lg font-bold">Doings</h1>
-      {#if !viewingUser}
-        <UploadButton onUpload={handleUpload} />
-      {/if}
-    </div>
-  </header>
+{#if $viewingUser}
+  <UserGallery images={userImages} uid={$viewingUser} onBack={handleBack} />
+{:else}
+  {#if images.length === 0}
+    <p class="text-center text-gray-400 py-16">No uploads yet. Be the first!</p>
+  {:else}
+    <Waterfall images={images} onUserClick={handleUserClick} />
+  {/if}
+{/if}
 
-  <main class="max-w-2xl mx-auto">
-    {#if viewingUser}
-      <UserGallery images={userImages} uid={viewingUser} onBack={handleBack} />
-    {:else}
-      {#if images.length === 0}
-        <p class="text-center text-gray-400 py-16">No uploads yet. Be the first!</p>
-      {:else}
-        <Waterfall images={images} onUserClick={handleUserClick} />
-      {/if}
-    {/if}
-  </main>
-
-  <InactivityWarning />
-</div>
+<InactivityWarning />
