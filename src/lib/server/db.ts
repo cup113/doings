@@ -6,7 +6,7 @@ const DB_PATH = process.env.DB_PATH || 'data/doings.db';
 
 mkdirSync(dirname(DB_PATH), { recursive: true });
 
-const db = new DatabaseSync(DB_PATH);
+export const db = new DatabaseSync(DB_PATH);
 db.exec('PRAGMA journal_mode=WAL');
 db.exec(`CREATE TABLE IF NOT EXISTS images (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,12 +24,12 @@ export interface ImageRecord {
   created_at: string;
 }
 
-export function getRecentImages(limit = 10): ImageRecord[] {
+export function getRecentImages(limit = 12): ImageRecord[] {
   const stmt = db.prepare('SELECT id, uid, path, created_at FROM images ORDER BY created_at DESC LIMIT ?');
   return stmt.all(limit) as unknown as ImageRecord[];
 }
 
-export function getUserImages(uid: string, limit = 10): ImageRecord[] {
+export function getUserImages(uid: string, limit = 12): ImageRecord[] {
   const stmt = db.prepare('SELECT id, uid, path, created_at FROM images WHERE uid = ? ORDER BY created_at DESC LIMIT ?');
   return stmt.all(uid, limit) as unknown as ImageRecord[];
 }

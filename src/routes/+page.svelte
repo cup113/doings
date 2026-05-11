@@ -1,7 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { viewingUser, onUploadCallback } from '$lib/stores/app';
-  import { get } from 'svelte/store';
   import { fetchRecentImages, fetchUserImages } from '$lib/utils/api';
   import type { ImageRecord } from '$lib/types';
   import Waterfall from '$lib/components/Waterfall.svelte';
@@ -10,14 +9,9 @@
 
   let images = $state<ImageRecord[]>([]);
   let userImages = $state<ImageRecord[]>([]);
-  let viewingUserRef: string | null = null;
 
   $effect(() => {
     fetchRecentImages().then((imgs) => (images = imgs));
-  });
-
-  $effect(() => {
-    viewingUserRef = get(viewingUser);
   });
 
   $effect(() => {
@@ -26,11 +20,11 @@
     source.onmessage = (event) => {
       const data: ImageRecord = JSON.parse(event.data);
       const current = untrack(() => images);
-      images = [data, ...current].slice(0, 10);
+      images = [data, ...current].slice(0, 12);
 
-      if (data.uid === viewingUserRef) {
+      if (data.uid === $viewingUser) {
         const currentUser = untrack(() => userImages);
-        userImages = [data, ...currentUser].slice(0, 10);
+        userImages = [data, ...currentUser].slice(0, 12);
       }
     };
 
@@ -42,18 +36,17 @@
   });
 
   $effect(() => {
-    const user = get(viewingUser);
-    if (user) {
-      fetchUserImages(user).then((imgs) => (userImages = imgs));
+    if ($viewingUser) {
+      fetchUserImages($viewingUser).then((imgs) => (userImages = imgs));
     } else {
       userImages = [];
     }
   });
 
   onUploadCallback.set((record: ImageRecord) => {
-    images = [record, ...images].slice(0, 10);
-    if (record.uid === get(viewingUser)) {
-      userImages = [record, ...userImages].slice(0, 10);
+    images = [record, ...images].slice(0, 12);
+    if (record.uid === $viewingUser) {
+      userImages = [record, ...userImages].slice(0, 12);
     }
   });
 

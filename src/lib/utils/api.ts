@@ -10,13 +10,13 @@ export async function uploadImage(file: Blob, uid: string): Promise<ImageRecord>
   return res.json();
 }
 
-export async function fetchRecentImages(limit = 10): Promise<ImageRecord[]> {
+export async function fetchRecentImages(limit = 12): Promise<ImageRecord[]> {
   const res = await fetch(`/api/images?limit=${limit}`);
   if (!res.ok) throw new Error('Failed to fetch images');
   return res.json();
 }
 
-export async function fetchUserImages(uid: string, limit = 10): Promise<ImageRecord[]> {
+export async function fetchUserImages(uid: string, limit = 12): Promise<ImageRecord[]> {
   const res = await fetch(`/api/images/${uid}?limit=${limit}`);
   if (!res.ok) throw new Error('Failed to fetch user images');
   return res.json();
