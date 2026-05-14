@@ -1,5 +1,6 @@
 import { Readable } from 'node:stream';
-import { imageEvents, type ImageEvent } from '$lib/server/events';
+import { imageEvents } from '$lib/server/events';
+import type { ImageRecord } from '$lib/types';
 
 export function GET({ request }: { request: Request }) {
   let closed = false;
@@ -8,7 +9,7 @@ export function GET({ request }: { request: Request }) {
     read() {}
   });
 
-  const listener = (event: ImageEvent) => {
+  const listener = (event: ImageRecord) => {
     if (!closed) {
       nodeStream.push(`data: ${JSON.stringify(event)}\n\n`);
     }

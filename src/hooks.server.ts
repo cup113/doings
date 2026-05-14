@@ -1,7 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { initBandwidth, isExceeded, addDownload } from '$lib/server/bandwidth';
-
-initBandwidth();
+import { isExceeded, addDownload } from '$lib/server/bandwidth';
 
 export const handle = async ({ event, resolve }) => {
   if (event.url.pathname.startsWith('/api/') && event.url.pathname !== '/api/bandwidth') {

@@ -1,10 +1,9 @@
 <script lang="ts">
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.png';
-	import { viewingUser, shortUid, onUploadCallback } from '$lib/stores/app';
+	import { viewingUser, shortUid } from '$lib/stores/app';
 	import UploadButton from '$lib/components/UploadButton.svelte';
 	import HelpPanel from '$lib/components/HelpPanel.svelte';
-	import type { ImageRecord } from '$lib/types';
 
 	let { children } = $props();
 	let showHelp = $state(false);
@@ -30,7 +29,7 @@
 			<div class="flex items-center gap-3">
 				<span class="text-xs text-gray-400">You: {shortUid}</span>
 				{#if !$viewingUser}
-					<UploadButton onUpload={(r: ImageRecord) => $onUploadCallback?.(r)} />
+					<UploadButton />
 				{/if}
 			</div>
 		</div>

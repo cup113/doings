@@ -14,45 +14,51 @@ src/
 ├── hooks.server.ts               Bandwidth middleware (daily 2GB limit)
 ├── lib/
 │   ├── server/
+│   │   ├── bandwidth.ts          In-memory byte counter + daily reset
 │   │   ├── db.ts                 SQLite via node:sqlite (DatabaseSync)
 │   │   ├── events.ts             EventEmitter for SSE broadcast
-│   │   └── bandwidth.ts          In-memory byte counter + daily reset
+│   │   └── imageStore.ts         Write file + insert DB + emit event
 │   ├── components/
-│   │   ├── UploadButton.svelte   Camera → compress (192px, 0.5 WebP) → upload + onUpload callback
-│   │   ├── Waterfall.svelte      Grid of all users' latest 10 images
+│   │   ├── HelpPanel.svelte      How-to overlay panel
+│   │   ├── InactivityWarning.svelte  30min idle → red overlay + Notification API
+│   │   ├── RelativeTime.svelte   Live-updating relative timestamp
+│   │   ├── UploadButton.svelte   Camera → compress (192px, 0.5 WebP) → upload
 │   │   ├── UserGallery.svelte    Single user's latest 10 images
-│   │   └── InactivityWarning.svelte  30min idle → red overlay + Notification API
+│   │   └── Waterfall.svelte      Grid of all users' latest 10 images
+│   ├── stores/
+│   │   └── app.ts                currentUid, shortUid, viewingUser store
 │   ├── utils/
-│   │   ├── identity.ts           nanoid generation, persisted in localStorage
-│   │   ├── compress.ts            Browser Canvas API resize + WebP encode
-│   │   └── api.ts                Typed fetch wrappers for all endpoints
+│   │   ├── api.ts                Typed fetch wrappers for all endpoints
+│   │   ├── compress.ts           Browser Canvas API resize + WebP encode
+│   │   ├── format.ts             Relative time formatter
+│   │   └── identity.ts           nanoid generation, persisted in localStorage
 │   ├── assets/
 │   │   └── favicon.png           512×512 favicon
 │   └── types.ts
 ├── routes/
 │   ├── +layout.svelte            Root layout: title, favicon (svelte:head)
 │   ├── +layout.ts                ssr = false (SPA)
-│   ├── +page.svelte              Orchestrator: waterfall ↔ user gallery, SSE + onUpload fallback
+│   ├── +page.svelte              Orchestrator: waterfall ↔ user gallery, SSE-driven updates
+│   ├── layout.css                @import 'tailwindcss'
 │   └── api/
-│       ├── upload/+server.ts     POST multipart → save to uploads/ + SQLite + SSE emit
+│       ├── bandwidth/+server.ts  GET current bandwidth usage
+│       ├── events/+server.ts     SSE stream (Readable.toWeb)
+│       ├── health/+server.ts     GET DB health check
 │       ├── images/+server.ts     GET all recent images
 │       ├── images/[uid]/+server.ts  GET user's recent images
-│       ├── events/+server.ts     SSE stream (Readable.toWeb)
-│       ├── uploads/[...path]/+server.ts  Serve image files
-│       └── bandwidth/+server.ts  GET current bandwidth usage
+│       ├── upload/+server.ts     POST multipart → storeImage → SSE emit
+│       └── uploads/[...path]/+server.ts  Serve image files
 ├── app.html
 ├── app.d.ts
-└── layout.css                   @import 'tailwindcss'
 ```
 
 ## Data Flow
 
 ```
 [Camera] → [Canvas compress (192px, 0.5 WebP)] → POST /api/upload
-→ save file to uploads/{uid}/{ts}.webp
+→ storeImage() writes uploads/{uid}/{ts}-{random}.webp
 → INSERT into SQLite (uid, path, created_at)
 → EventEmitter.emit('new_image') → SSE /api/events pushes to all clients
-→ onUpload callback updates images immediately (SSE fallback)
 → Waterfall / UserGallery update via untrack(() => images)
 ```
 
@@ -64,7 +70,7 @@ src/
 ## Bandwidth Limiter
 
 - In-memory counters: `uploadBytes` + `downloadBytes`
-- Daily reset: checks every 60s if clock crossed midnight
+- Daily reset: checked on each bandwidth operation (no polling)
 - 2GB limit: `hooks.server.ts` returns 503 for any `/api/*` route (except `/api/bandwidth`)
 - Download tracking: `hooks.server.ts` reads `content-length` on `/api/uploads/*` responses
 
@@ -87,7 +93,6 @@ Environment variables:
 - `UPLOADS_DIR` (default: `uploads`)
 - `DB_PATH` (default: `data/doings.db`)
 - `ORIGIN` — required by SvelteKit for CSRF protection
-- `BODY_SIZE_LIMIT` — 1MB default for upload endpoint
 
 ### Coolify + Traefik: SSE Fix
 

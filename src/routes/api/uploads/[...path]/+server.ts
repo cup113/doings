@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
-const UPLOADS_DIR = process.env.UPLOADS_DIR || 'uploads';
+import { UPLOADS_DIR } from '$lib/server/imageStore';
 
 export async function GET({ params }: { params: { path: string } }) {
   const filePath = join(UPLOADS_DIR, params.path);

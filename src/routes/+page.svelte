@@ -1,6 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte';
-  import { viewingUser, onUploadCallback } from '$lib/stores/app';
+  import { viewingUser } from '$lib/stores/app';
   import { fetchRecentImages, fetchUserImages } from '$lib/utils/api';
   import type { ImageRecord } from '$lib/types';
   import Waterfall from '$lib/components/Waterfall.svelte';
@@ -40,13 +40,6 @@
       fetchUserImages($viewingUser).then((imgs) => (userImages = imgs));
     } else {
       userImages = [];
-    }
-  });
-
-  onUploadCallback.set((record: ImageRecord) => {
-    images = [record, ...images].slice(0, 12);
-    if (record.uid === $viewingUser) {
-      userImages = [record, ...userImages].slice(0, 12);
     }
   });
 

@@ -40,7 +40,6 @@ docker compose up --build
 | `UPLOADS_DIR` | `uploads` | Image storage directory |
 | `DB_PATH` | `data/doings.db` | SQLite database path |
 | `ORIGIN` | (required) | App origin URL (SvelteKit CSRF) |
-| `BODY_SIZE_LIMIT` | `1048576` | Max upload body size (bytes) |
 
 ## Coolify Deployment (Traefik)
 
@@ -63,36 +62,43 @@ The SSE endpoint also sends `X-Accel-Buffering: no` and `Cache-Control: no-store
 
 ```
 src/
-├── hooks.server.ts              Bandwidth middleware
+├── hooks.server.ts              Bandwidth gating (503) + download tracking
+├── lib/
+│   ├── server/
+│   │   ├── bandwidth.ts         Byte counter + daily reset
+│   │   ├── db.ts                SQLite queries
+│   │   ├── events.ts            EventEmitter for SSE
+│   │   └── imageStore.ts        File storage logic
+│   ├── components/
+│   │   ├── HelpPanel.svelte
+│   │   ├── InactivityWarning.svelte
+│   │   ├── RelativeTime.svelte
+│   │   ├── UploadButton.svelte
+│   │   ├── UserGallery.svelte
+│   │   └── Waterfall.svelte
+│   ├── stores/
+│   │   └── app.ts               Current UID, viewing user
+│   ├── utils/
+│   │   ├── api.ts               Fetch wrappers
+│   │   ├── compress.ts          Canvas WebP compression
+│   │   ├── format.ts            Relative time formatting
+│   │   └── identity.ts          nanoid identity
+│   ├── assets/
+│   │   └── favicon.png
+│   └── types.ts
 ├── routes/
 │   ├── +layout.svelte           Root layout (favicon, title)
 │   ├── +layout.ts               ssr = false
 │   ├── +page.svelte             Main orchestrator
+│   ├── layout.css               @import 'tailwindcss'
 │   └── api/
-│       ├── upload/+server.ts    POST upload handler
+│       ├── bandwidth/+server.ts GET bandwidth usage
+│       ├── events/+server.ts    SSE endpoint
+│       ├── health/+server.ts    Health check
 │       ├── images/+server.ts    GET all images
 │       ├── images/[uid]/+server.ts  GET user images
-│       ├── events/+server.ts    SSE endpoint
-│       ├── uploads/[...path]/+server.ts  Serve files
-│       └── bandwidth/+server.ts GET bandwidth usage
-├── lib/
-│   ├── server/
-│   │   ├── db.ts                SQLite queries
-│   │   ├── events.ts            EventEmitter for SSE
-│   │   └── bandwidth.ts         Byte counter + daily reset
-│   ├── components/
-│   │   ├── UploadButton.svelte
-│   │   ├── Waterfall.svelte
-│   │   ├── UserGallery.svelte
-│   │   └── InactivityWarning.svelte
-│   ├── utils/
-│   │   ├── identity.ts          nanoid identity
-│   │   ├── compress.ts          Canvas WebP compression
-│   │   └── api.ts               Fetch wrappers
-│   ├── assets/
-│   │   └── favicon.png
-│   └── types.ts
+│       ├── upload/+server.ts    POST upload handler
+│       └── uploads/[...path]/+server.ts  Serve files
 ├── app.html
-├── app.d.ts
-└── layout.css
+└── app.d.ts
 ```

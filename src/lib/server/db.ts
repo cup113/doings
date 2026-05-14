@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import type { ImageRecord } from '$lib/types';
 
 const DB_PATH = process.env.DB_PATH || 'data/doings.db';
 
@@ -16,13 +17,6 @@ db.exec(`CREATE TABLE IF NOT EXISTS images (
 )`);
 db.exec('CREATE INDEX IF NOT EXISTS idx_images_created ON images(created_at DESC)');
 db.exec('CREATE INDEX IF NOT EXISTS idx_images_uid ON images(uid, created_at DESC)');
-
-export interface ImageRecord {
-  id: number;
-  uid: string;
-  path: string;
-  created_at: string;
-}
 
 export function getRecentImages(limit = 12): ImageRecord[] {
   const stmt = db.prepare('SELECT id, uid, path, created_at FROM images ORDER BY created_at DESC LIMIT ?');
