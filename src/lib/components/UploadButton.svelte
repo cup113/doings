@@ -4,6 +4,7 @@
 
   let inputEl = $state<HTMLInputElement>();
   let uploading = $state(false);
+  let done = $state(false);
   let error = $state('');
 
   async function handleFile(e: Event) {
@@ -12,6 +13,7 @@
     if (!file) return;
 
     uploading = true;
+    done = false;
     error = '';
 
     try {
@@ -24,6 +26,11 @@
     } finally {
       uploading = false;
       input.value = '';
+    }
+
+    if (!error) {
+      done = true;
+      setTimeout(() => done = false, 1500);
     }
   }
 
@@ -46,7 +53,7 @@
   disabled={uploading}
   class="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer"
 >
-  {uploading ? 'Uploading...' : 'Take Photo'}
+  {uploading ? 'Uploading...' : done ? '✓ Done' : 'Take Photo'}
 </button>
 
 {#if error}

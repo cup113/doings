@@ -3,10 +3,11 @@
   import type { ImageRecord } from '$lib/types';
   import RelativeTime from './RelativeTime.svelte';
 
-  let { images, uid, onBack }: {
+  let { images, uid, onBack, onImageClick }: {
     images: ImageRecord[];
     uid: string;
     onBack: () => void;
+    onImageClick: (img: ImageRecord) => void;
   } = $props();
 
   function shortUid(uid: string) {
@@ -26,7 +27,10 @@
 
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
     {#each images as img (img.id)}
-      <div class="relative aspect-square overflow-hidden rounded-lg">
+      <button
+        onclick={() => onImageClick(img)}
+        class="relative aspect-square overflow-hidden rounded-lg hover:ring-2 ring-blue-500 transition-all cursor-pointer animate-fadeIn"
+      >
         <img
           src="/api/uploads/{img.path}"
           alt=""
@@ -41,7 +45,7 @@
           {/if}
           &middot; <RelativeTime timestamp={img.created_at} />
         </div>
-      </div>
+      </button>
     {/each}
   </div>
 

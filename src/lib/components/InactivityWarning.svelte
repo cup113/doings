@@ -2,7 +2,9 @@
   import favicon from '$lib/assets/favicon.png';
 
   let stage = $state<'hidden' | 'early' | 'mid' | 'late' | 'alert'>('hidden');
-  let snoozeUntil = $state(0);
+  let snoozeUntil = $state(
+    parseInt(localStorage.getItem('doings_snooze_until') || '0')
+  );
   let elapsed = $state(0);
   let notified = $state(false);
 
@@ -17,6 +19,7 @@
 
       const now = Date.now();
       if (snoozeUntil > now) return;
+      if (snoozeUntil > 0) localStorage.removeItem('doings_snooze_until');
 
       const diff = now - parseInt(last);
       elapsed = Math.floor(diff / 60000);
@@ -62,6 +65,7 @@
 
   function snooze(minutes: number) {
     snoozeUntil = Date.now() + minutes * 60 * 1000;
+    localStorage.setItem('doings_snooze_until', snoozeUntil.toString());
     stage = 'hidden';
     notified = false;
   }
