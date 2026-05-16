@@ -20,11 +20,12 @@ src/
 │   │   └── imageStore.ts         Write file + insert DB + prune + emit event
 │   ├── components/
 │   │   ├── HelpPanel.svelte      How-to overlay panel
+│   │   ├── ImageLightbox.svelte  Full-screen image viewer with prev/next navigation
 │   │   ├── InactivityWarning.svelte  30min idle → red overlay + Notification API
 │   │   ├── RelativeTime.svelte   Live-updating relative timestamp
 │   │   ├── UploadButton.svelte   Camera → compress (256px, 0.5 WebP) → upload
-│   │   ├── UserGallery.svelte    Single user's latest 10 images
-│   │   └── Waterfall.svelte      Grid of all users' latest 10 images
+│   │   ├── UserGallery.svelte    Single user's latest 12 images
+│   │   └── Waterfall.svelte      Grid of all users' latest 12 images
 │   ├── stores/
 │   │   └── app.ts                currentUid, shortUid, viewingUser store
 │   ├── utils/

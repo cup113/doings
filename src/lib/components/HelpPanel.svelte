@@ -5,7 +5,7 @@
 <button
   onclick={onClose}
   aria-label="Close help"
-  class="fixed inset-0 bg-black/30 z-40 cursor-default"
+  class="fixed inset-0 bg-black/30 z-40 cursor-pointer"
 ></button>
 
 <div class="fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-xl z-50 p-6 overflow-y-auto">
@@ -26,7 +26,7 @@
     </div>
     <div>
       <strong class="text-gray-900">Browse</strong>
-      <p class="mt-1">The main view shows the latest photos from everyone. Tap any photo to see all uploads from that person.</p>
+      <p class="mt-1">The main view shows the latest photos from everyone. Tap any photo to view it full-screen; swipe or use arrows to browse. Tap <em>View all by</em> to see that person's full gallery.</p>
     </div>
   </div>
 </div>

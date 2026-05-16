@@ -4,9 +4,11 @@ A real-time photo-sharing app built with SvelteKit. Snap a photo, share instantl
 
 ## Features
 
-- Camera capture → compress to 192px WebP → upload
+- Camera capture → compress to 256px WebP → upload
 - Real-time SSE feed — new photos appear instantly
+- Image lightbox with prev/next navigation
 - Per-user gallery view
+- Inactivity reminders (staged, 20–30 min)
 - Bandwidth limiter (2GB/day)
 - Inactivity detection with notification warning
 
