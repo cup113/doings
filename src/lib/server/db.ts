@@ -28,6 +28,30 @@ export function getUserImages(uid: string, limit = 12): ImageRecord[] {
   return stmt.all(uid, limit) as unknown as ImageRecord[];
 }
 
+export function getTotalCount(): number {
+  const row = db.prepare('SELECT COUNT(*) as count FROM images').get() as { count: number };
+  return row.count;
+}
+
+export function getUserCount(uid: string): number {
+  const row = db.prepare('SELECT COUNT(*) as count FROM images WHERE uid = ?').get(uid) as { count: number };
+  return row.count;
+}
+
+export function deleteImage(id: number): void {
+  db.prepare('DELETE FROM images WHERE id = ?').run(id);
+}
+
+export function getOldestImage(): ImageRecord | null {
+  const row = db.prepare('SELECT id, uid, path, created_at FROM images ORDER BY created_at ASC LIMIT 1').get() as ImageRecord | undefined;
+  return row ?? null;
+}
+
+export function getOldestUserImage(uid: string): ImageRecord | null {
+  const row = db.prepare('SELECT id, uid, path, created_at FROM images WHERE uid = ? ORDER BY created_at ASC LIMIT 1').get(uid) as ImageRecord | undefined;
+  return row ?? null;
+}
+
 export function insertImage(uid: string, path: string): ImageRecord {
   const stmt = db.prepare('INSERT INTO images (uid, path) VALUES (?, ?)');
   const { lastInsertRowid } = stmt.run(uid, path);

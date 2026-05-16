@@ -3,7 +3,7 @@ export function compressImage(file: File): Promise<Blob> {
     const img = new Image();
 
     img.onload = () => {
-      const maxEdge = 192;
+      const maxEdge = 256;
       let { width, height } = img;
 
       if (width > height) {

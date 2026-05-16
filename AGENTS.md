@@ -17,12 +17,12 @@ src/
 │   │   ├── bandwidth.ts          In-memory byte counter + daily reset
 │   │   ├── db.ts                 SQLite via node:sqlite (DatabaseSync)
 │   │   ├── events.ts             EventEmitter for SSE broadcast
-│   │   └── imageStore.ts         Write file + insert DB + emit event
+│   │   └── imageStore.ts         Write file + insert DB + prune + emit event
 │   ├── components/
 │   │   ├── HelpPanel.svelte      How-to overlay panel
 │   │   ├── InactivityWarning.svelte  30min idle → red overlay + Notification API
 │   │   ├── RelativeTime.svelte   Live-updating relative timestamp
-│   │   ├── UploadButton.svelte   Camera → compress (192px, 0.5 WebP) → upload
+│   │   ├── UploadButton.svelte   Camera → compress (256px, 0.5 WebP) → upload
 │   │   ├── UserGallery.svelte    Single user's latest 10 images
 │   │   └── Waterfall.svelte      Grid of all users' latest 10 images
 │   ├── stores/
@@ -55,12 +55,21 @@ src/
 ## Data Flow
 
 ```
-[Camera] → [Canvas compress (192px, 0.5 WebP)] → POST /api/upload
+[Camera] → [Canvas compress (256px, 0.5 WebP)] → POST /api/upload
 → storeImage() writes uploads/{uid}/{ts}-{random}.webp
 → INSERT into SQLite (uid, path, created_at)
+→ prune() caps at 100/user & 2,000 total (deletes oldest file + row)
 → EventEmitter.emit('new_image') → SSE /api/events pushes to all clients
 → Waterfall / UserGallery update via untrack(() => images)
 ```
+
+## Pruning
+
+- On each upload, `imageStore.prune()` enforces two limits synchronously:
+  - **Per-user**: max 100 images (deletes the user's oldest)
+  - **Global**: max 2,000 images total (deletes global oldest)
+- File deletion via `fs.unlinkSync`; DB deletion via `DELETE FROM images WHERE id = ?`
+- No cron, no background process — runs inline in the upload request
 
 ## Identity
 

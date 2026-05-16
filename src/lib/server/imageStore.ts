@@ -1,6 +1,6 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import { insertImage } from './db';
+import { insertImage, getTotalCount, getUserCount, deleteImage, getOldestImage, getOldestUserImage } from './db';
 import { imageEvents } from './events';
 import type { ImageRecord } from '$lib/types';
 
@@ -15,7 +15,30 @@ export function storeImage(uid: string, buffer: Buffer): ImageRecord {
   writeFileSync(filePath, buffer);
 
   const record = insertImage(uid, `${uid}/${filename}`);
+
+  prune(uid);
+
   imageEvents.emit('new_image', record);
 
   return record;
+}
+
+function prune(userUid: string): void {
+  let count = getUserCount(userUid);
+  while (count > 100) {
+    const oldest = getOldestUserImage(userUid);
+    if (!oldest) break;
+    try { unlinkSync(join(UPLOADS_DIR, oldest.path)); } catch { /* file may be gone */ }
+    deleteImage(oldest.id);
+    count--;
+  }
+
+  let total = getTotalCount();
+  while (total > 2000) {
+    const oldest = getOldestImage();
+    if (!oldest) break;
+    try { unlinkSync(join(UPLOADS_DIR, oldest.path)); } catch { /* file may be gone */ }
+    deleteImage(oldest.id);
+    total--;
+  }
 }
