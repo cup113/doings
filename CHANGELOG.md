@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1 — 2026-05-17
+
+- **Fix**: resolve `each_key_duplicate` Svelte error (skeleton key + SSE dedup)
+
 ## 1.0.0 — 2026-05-16
 
 - **Lightbox**: click any image for full-screen viewer with prev/next navigation, keyboard support (Escape/arrows), and "View all by" link

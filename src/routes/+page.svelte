@@ -37,10 +37,12 @@
     source.addEventListener('new_image', (event: MessageEvent) => {
       const data: ImageRecord = JSON.parse(event.data);
       const current = untrack(() => images);
+      if (current.some((img) => img.id === data.id)) return;
       images = [data, ...current].slice(0, 12);
 
       if (data.uid === $viewingUser) {
         const currentUser = untrack(() => userImages);
+        if (currentUser.some((img) => img.id === data.id)) return;
         userImages = [data, ...currentUser].slice(0, 12);
       }
     });
@@ -106,7 +108,7 @@
   />
 {:else if loading}
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4">
-    {#each Array(12) as i (i)}
+    {#each Array(12) as _, i (i)}
       <div class="aspect-square rounded-lg bg-gray-200 animate-pulse"></div>
     {/each}
   </div>
