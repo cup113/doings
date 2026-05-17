@@ -17,3 +17,9 @@ Prune-on-upload was chosen because:
 - **Fast** — at the expected scale (tens of images per upload, not millions), the overhead is negligible
 
 The limits (100/user, 2,000 total) were chosen as generous guardrails. At ~10KB/image, max storage is ~20MB. The two-tier design prevents a single prolific user from crowding out everyone else.
+
+### Later addition: self-delete (2026-05-17)
+
+User-initiated self-delete was later added as a complementary feature. Unlike prune (which evicts the oldest automatically), self-delete lets users remove any of their own images by id. Ownership is validated server-side (`image.uid === uid`) to address the concern raised in option 2 about uid-guessing. Deletion broadcasts a `delete_image` SSE event so all connected clients update in real time.
+
+The original option 2 (manual delete) was initially rejected because the anonymous uid model made it impossible to authenticate users. The self-delete feature solves this by requiring the delete request to include the uid, which only the device that owns the image knows (matching `localStorage('doings_uid')`). This is not strong auth, but it raises the bar enough for this app's threat model. Prune remains as a safety net for abandoned uploads.

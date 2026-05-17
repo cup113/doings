@@ -41,7 +41,7 @@
     {#each images as img (img.id)}
       <button
         onclick={() => onImageClick(img)}
-        class="relative aspect-square overflow-hidden rounded-lg hover:ring-2 ring-blue-500 transition-all cursor-pointer animate-fadeIn group"
+        class="relative aspect-square overflow-hidden rounded-lg hover:ring-2 ring-blue-500 transition-all cursor-pointer animate-fadeIn"
       >
         <img
           src="/api/uploads/{img.path}"
@@ -56,8 +56,7 @@
             onclick={(e) => handleDelete(img, e)}
             onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDelete(img, e); }}
             class="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/50 text-white text-sm
-                   flex items-center justify-center opacity-0 group-hover:opacity-100
-                   hover:bg-red-600 transition-all cursor-pointer z-10"
+                   flex items-center justify-center hover:bg-red-600 transition-all cursor-pointer z-10"
             aria-label="Delete image"
           >&times;</span>
         {/if}

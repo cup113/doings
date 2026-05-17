@@ -106,7 +106,7 @@
   />
 {:else if loading}
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4">
-    {#each Array(12) as _}
+    {#each Array(12) as i (i)}
       <div class="aspect-square rounded-lg bg-gray-200 animate-pulse"></div>
     {/each}
   </div>

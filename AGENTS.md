@@ -23,7 +23,7 @@ src/
 │   │   ├── ImageLightbox.svelte  Full-screen image viewer with prev/next navigation
 │   │   ├── InactivityWarning.svelte  30min idle → red overlay + Notification API
 │   │   ├── RelativeTime.svelte   Live-updating relative timestamp
-│   │   ├── UploadButton.svelte   Camera → compress (256px, 0.5 WebP) → upload
+│   │   ├── UploadButton.svelte   Camera → compress (384px, 0.75 WebP) → upload
 │   │   ├── UserGallery.svelte    Single user's latest 12 images
 │   │   └── Waterfall.svelte      Grid of all users' latest 12 images
 │   ├── stores/
@@ -47,6 +47,7 @@ src/
 │       ├── health/+server.ts     GET DB health check
 │       ├── images/+server.ts     GET all recent images
 │       ├── images/[uid]/+server.ts  GET user's recent images
+│       ├── images/delete/+server.ts  POST delete (ownership validated) → SSE emit
 │       ├── upload/+server.ts     POST multipart → storeImage → SSE emit
 │       └── uploads/[...path]/+server.ts  Serve image files
 ├── app.html
@@ -56,7 +57,7 @@ src/
 ## Data Flow
 
 ```
-[Camera] → [Canvas compress (256px, 0.5 WebP)] → POST /api/upload
+[Camera] → [Canvas compress (384px, 0.75 WebP)] → POST /api/upload
 → storeImage() writes uploads/{uid}/{ts}-{random}.webp
 → INSERT into SQLite (uid, path, created_at)
 → prune() caps at 100/user & 2,000 total (deletes oldest file + row)
@@ -71,6 +72,14 @@ src/
   - **Global**: max 2,000 images total (deletes global oldest)
 - File deletion via `fs.unlinkSync`; DB deletion via `DELETE FROM images WHERE id = ?`
 - No cron, no background process — runs inline in the upload request
+
+## Self-delete
+
+- Users can delete their own images from their User Gallery (self-uid only)
+- `POST /api/images/delete` validates `image.uid === uid` server-side
+- On success: `fs.unlinkSync` file + `DELETE FROM images WHERE id = ?` + `imageEvents.emit('delete_image')`
+- SSE `delete_image` event is dispatched; all connected clients filter out the deleted image from both waterfall and user gallery views
+- Independent of prune — both mechanisms coexist (user removes specific images; prune caps overall counts)
 
 ## Identity
 

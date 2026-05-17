@@ -4,13 +4,13 @@ A real-time photo-sharing app built with SvelteKit. Snap a photo, share instantl
 
 ## Features
 
-- Camera capture → compress to 256px WebP → upload
+- Camera capture → compress to 384px WebP (0.75 quality) → upload
 - Real-time SSE feed — new photos appear instantly
 - Image lightbox with prev/next navigation
 - Per-user gallery view
+- Self-delete your own images (syncs to all viewers in real time)
 - Inactivity reminders (staged, 20–30 min)
 - Bandwidth limiter (2GB/day)
-- Inactivity detection with notification warning
 
 ## Tech Stack
 
@@ -99,6 +99,7 @@ src/
 │       ├── health/+server.ts    Health check
 │       ├── images/+server.ts    GET all images
 │       ├── images/[uid]/+server.ts  GET user images
+│       ├── images/delete/+server.ts  POST delete (ownership validated)
 │       ├── upload/+server.ts    POST upload handler
 │       └── uploads/[...path]/+server.ts  Serve files
 ├── app.html

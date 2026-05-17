@@ -28,5 +28,9 @@
       <strong class="text-gray-900">Browse</strong>
       <p class="mt-1">The main view shows the latest photos from everyone. Tap any photo to view it full-screen; swipe or use arrows to browse. Tap <em>View all by</em> to see that person's full gallery.</p>
     </div>
+    <div>
+      <strong class="text-gray-900">Delete</strong>
+      <p class="mt-1">In your own gallery, tap <b>×</b> to delete an image. Deletion syncs to all viewers in real time.</p>
+    </div>
   </div>
 </div>
