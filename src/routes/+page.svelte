@@ -34,7 +34,7 @@
       fetchRecentImages().then((imgs) => (images = imgs));
     };
 
-    source.onmessage = (event) => {
+    source.addEventListener('new_image', (event: MessageEvent) => {
       const data: ImageRecord = JSON.parse(event.data);
       const current = untrack(() => images);
       images = [data, ...current].slice(0, 12);
@@ -43,7 +43,18 @@
         const currentUser = untrack(() => userImages);
         userImages = [data, ...currentUser].slice(0, 12);
       }
-    };
+    });
+
+    source.addEventListener('delete_image', (event: MessageEvent) => {
+      const data: ImageRecord = JSON.parse(event.data);
+      const current = untrack(() => images);
+      images = current.filter((img) => img.id !== data.id);
+
+      if (data.uid === $viewingUser) {
+        const currentUser = untrack(() => userImages);
+        userImages = currentUser.filter((img) => img.id !== data.id);
+      }
+    });
 
     source.onerror = () => {};
 

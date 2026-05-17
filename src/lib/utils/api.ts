@@ -22,6 +22,18 @@ export async function fetchUserImages(uid: string, limit = 12): Promise<ImageRec
   return res.json();
 }
 
+export async function deleteImage(id: number, uid: string): Promise<void> {
+  const res = await fetch('/api/images/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, uid }),
+  });
+  if (!res.ok) {
+    const body = await res.json();
+    throw new Error(body.error || 'Delete failed');
+  }
+}
+
 export async function fetchBandwidth(): Promise<BandwidthStatus> {
   const res = await fetch('/api/bandwidth');
   if (!res.ok) throw new Error('Failed to fetch bandwidth');

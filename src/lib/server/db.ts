@@ -42,6 +42,11 @@ export function deleteImage(id: number): void {
   db.prepare('DELETE FROM images WHERE id = ?').run(id);
 }
 
+export function getImageById(id: number): ImageRecord | null {
+  const row = db.prepare('SELECT id, uid, path, created_at FROM images WHERE id = ?').get(id) as ImageRecord | undefined;
+  return row ?? null;
+}
+
 export function getOldestImage(): ImageRecord | null {
   const row = db.prepare('SELECT id, uid, path, created_at FROM images ORDER BY created_at ASC LIMIT 1').get() as ImageRecord | undefined;
   return row ?? null;

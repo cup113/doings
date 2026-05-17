@@ -1,6 +1,7 @@
 <script lang="ts">
   import { currentUid } from '$lib/stores/app';
   import type { ImageRecord } from '$lib/types';
+  import { deleteImage } from '$lib/utils/api';
   import RelativeTime from './RelativeTime.svelte';
 
   let { images, uid, onBack, onImageClick }: {
@@ -12,6 +13,17 @@
 
   function shortUid(uid: string) {
     return uid.slice(0, 3);
+  }
+
+  async function handleDelete(img: ImageRecord, e: Event) {
+    e.stopPropagation();
+    if (!confirm('Delete this image?')) return;
+    try {
+      await deleteImage(img.id, currentUid);
+      images = images.filter((i) => i.id !== img.id);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Delete failed');
+    }
   }
 </script>
 
@@ -29,7 +41,7 @@
     {#each images as img (img.id)}
       <button
         onclick={() => onImageClick(img)}
-        class="relative aspect-square overflow-hidden rounded-lg hover:ring-2 ring-blue-500 transition-all cursor-pointer animate-fadeIn"
+        class="relative aspect-square overflow-hidden rounded-lg hover:ring-2 ring-blue-500 transition-all cursor-pointer animate-fadeIn group"
       >
         <img
           src="/api/uploads/{img.path}"
@@ -37,6 +49,18 @@
           loading="lazy"
           class="w-full h-full object-cover"
         />
+        {#if img.uid === currentUid}
+          <span
+            role="button"
+            tabindex="0"
+            onclick={(e) => handleDelete(img, e)}
+            onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDelete(img, e); }}
+            class="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/50 text-white text-sm
+                   flex items-center justify-center opacity-0 group-hover:opacity-100
+                   hover:bg-red-600 transition-all cursor-pointer z-10"
+            aria-label="Delete image"
+          >&times;</span>
+        {/if}
         <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1 pt-4 text-xs text-white opacity-100">
           {#if img.uid === currentUid}
             <span class="text-cyan-300 font-medium">You</span>

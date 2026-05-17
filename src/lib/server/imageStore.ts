@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import { insertImage, getTotalCount, getUserCount, deleteImage, getOldestImage, getOldestUserImage } from './db';
+import { insertImage, getImageById, getTotalCount, getUserCount, deleteImage, getOldestImage, getOldestUserImage } from './db';
 import { imageEvents } from './events';
 import type { ImageRecord } from '$lib/types';
 
@@ -21,6 +21,19 @@ export function storeImage(uid: string, buffer: Buffer): ImageRecord {
   imageEvents.emit('new_image', record);
 
   return record;
+}
+
+export function deleteImageRecord(id: number, uid: string): ImageRecord {
+  const img = getImageById(id);
+  if (!img) throw new Error('Image not found');
+  if (img.uid !== uid) throw new Error('Not authorized');
+
+  try { unlinkSync(join(UPLOADS_DIR, img.path)); } catch { /* file may be gone */ }
+  deleteImage(img.id);
+
+  imageEvents.emit('delete_image', img);
+
+  return img;
 }
 
 function prune(userUid: string): void {

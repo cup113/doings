@@ -3,7 +3,7 @@ export function compressImage(file: File): Promise<Blob> {
     const img = new Image();
 
     img.onload = () => {
-      const maxEdge = 256;
+      const maxEdge = 384;
       let { width, height } = img;
 
       if (width > height) {
@@ -31,7 +31,7 @@ export function compressImage(file: File): Promise<Blob> {
           else reject(new Error('Failed to compress'));
         },
         'image/webp',
-        0.5
+        0.75
       );
     };
 
