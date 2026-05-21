@@ -68,9 +68,13 @@ src/
 ├── lib/
 │   ├── server/
 │   │   ├── bandwidth.ts         Byte counter + daily reset
-│   │   ├── db.ts                SQLite queries
-│   │   ├── events.ts            EventEmitter for SSE
-│   │   └── imageStore.ts        File storage logic
+│   │   ├── config.ts            Environment config (UPLOADS_DIR, DB_PATH)
+│   │   ├── events.ts            Typed EventEmitter for SSE
+│   │   ├── imageStore.ts        File storage logic
+│   │   ├── init.ts              Composition root: DB → migrate → repo
+│   │   ├── migrate.ts           Schema DDL
+│   │   ├── repository.ts        ImageRepository interface + DeleteResult
+│   │   └── SqliteImageRepository.ts  SQLite adapter
 │   ├── components/
 │   │   ├── HelpPanel.svelte
 │   │   ├── InactivityWarning.svelte

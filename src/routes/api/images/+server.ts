@@ -1,8 +1,9 @@
 import { json } from '@sveltejs/kit';
-import { getRecentImages } from '$lib/server/db';
+import { repo } from '$lib/server/init';
 
 export async function GET({ url }: { url: URL }) {
   const limit = parseInt(url.searchParams.get('limit') || '12');
-  const images = getRecentImages(limit);
+  const after = url.searchParams.get('after');
+  const images = repo.getImages({ limit, after: after ? parseInt(after) : undefined });
   return json(images);
 }

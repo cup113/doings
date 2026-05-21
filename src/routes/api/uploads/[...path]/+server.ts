@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { UPLOADS_DIR } from '$lib/server/imageStore';
+import { UPLOADS_DIR } from '$lib/server/config';
 
 export async function GET({ params }: { params: { path: string } }) {
   const filePath = join(UPLOADS_DIR, params.path);

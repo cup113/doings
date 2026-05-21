@@ -1,14 +1,12 @@
 import { json } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
+import { repo } from '$lib/server/init';
 
 export function GET() {
-  try {
-    db.prepare('SELECT 1').get();
+  if (repo.ping()) {
     return json({ status: 'ok' });
-  } catch (err) {
-    return new Response(JSON.stringify({ status: 'error', message: String(err) }), {
-      status: 500,
-      headers: { 'content-type': 'application/json' }
-    });
   }
+  return new Response(JSON.stringify({ status: 'error', message: 'Database unreachable' }), {
+    status: 500,
+    headers: { 'content-type': 'application/json' }
+  });
 }

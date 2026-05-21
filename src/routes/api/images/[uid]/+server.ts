@@ -1,8 +1,9 @@
 import { json } from '@sveltejs/kit';
-import { getUserImages } from '$lib/server/db';
+import { repo } from '$lib/server/init';
 
 export async function GET({ params, url }: { params: { uid: string }; url: URL }) {
   const limit = parseInt(url.searchParams.get('limit') || '12');
-  const images = getUserImages(params.uid, limit);
+  const after = url.searchParams.get('after');
+  const images = repo.getImages({ uid: params.uid, limit, after: after ? parseInt(after) : undefined });
   return json(images);
 }

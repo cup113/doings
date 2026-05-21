@@ -1,10 +1,10 @@
 import { mkdirSync, writeFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import { insertImage, getImageById, getTotalCount, getUserCount, deleteImage, getOldestImage, getOldestUserImage } from './db';
+import { repo } from './init';
 import { imageEvents } from './events';
+import { UPLOADS_DIR } from './config';
 import type { ImageRecord } from '$lib/types';
-
-export const UPLOADS_DIR = process.env.UPLOADS_DIR || 'uploads';
+import type { DeleteResult } from './repository';
 
 export function storeImage(uid: string, buffer: Buffer): ImageRecord {
   const userDir = join(UPLOADS_DIR, uid);
@@ -14,7 +14,7 @@ export function storeImage(uid: string, buffer: Buffer): ImageRecord {
   const filePath = join(userDir, filename);
   writeFileSync(filePath, buffer);
 
-  const record = insertImage(uid, `${uid}/${filename}`);
+  const record = repo.insertImage(uid, `${uid}/${filename}`);
 
   prune(uid);
 
@@ -23,35 +23,43 @@ export function storeImage(uid: string, buffer: Buffer): ImageRecord {
   return record;
 }
 
-export function deleteImageRecord(id: number, uid: string): ImageRecord {
-  const img = getImageById(id);
-  if (!img) throw new Error('Image not found');
-  if (img.uid !== uid) throw new Error('Not authorized');
+export function deleteImageRecord(id: number, uid: string): DeleteResult {
+  const img = repo.getImageById(id);
+  if (!img) return { ok: false, reason: 'not_found' };
+  if (img.uid !== uid) return { ok: false, reason: 'unauthorized' };
 
   try { unlinkSync(join(UPLOADS_DIR, img.path)); } catch { /* file may be gone */ }
-  deleteImage(img.id);
+  repo.deleteImage(img.id);
 
   imageEvents.emit('delete_image', img);
 
-  return img;
+  return { ok: true, record: img };
 }
 
 function prune(userUid: string): void {
-  let count = getUserCount(userUid);
+  let count = repo.countImages({ uid: userUid });
   while (count > 100) {
     const oldest = getOldestUserImage(userUid);
     if (!oldest) break;
     try { unlinkSync(join(UPLOADS_DIR, oldest.path)); } catch { /* file may be gone */ }
-    deleteImage(oldest.id);
+    repo.deleteImage(oldest.id);
     count--;
   }
 
-  let total = getTotalCount();
+  let total = repo.countImages({});
   while (total > 2000) {
     const oldest = getOldestImage();
     if (!oldest) break;
     try { unlinkSync(join(UPLOADS_DIR, oldest.path)); } catch { /* file may be gone */ }
-    deleteImage(oldest.id);
+    repo.deleteImage(oldest.id);
     total--;
   }
+}
+
+function getOldestImage(): ImageRecord | null {
+  return repo.getImages({ order: 'oldest', limit: 1 })[0] ?? null;
+}
+
+function getOldestUserImage(uid: string): ImageRecord | null {
+  return repo.getImages({ uid, order: 'oldest', limit: 1 })[0] ?? null;
 }

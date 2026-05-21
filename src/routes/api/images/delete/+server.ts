@@ -8,13 +8,12 @@ export async function POST({ request }: { request: Request }) {
     return json({ error: 'Invalid id or uid' }, { status: 400 });
   }
 
-  try {
-    deleteImageRecord(id, uid);
-    return json({ ok: true });
-  } catch (e) {
-    const msg = (e as Error).message;
-    if (msg === 'Image not found') return json({ error: msg }, { status: 404 });
-    if (msg === 'Not authorized') return json({ error: msg }, { status: 403 });
-    return json({ error: 'Internal error' }, { status: 500 });
+  const result = deleteImageRecord(id, uid);
+
+  if (!result.ok) {
+    if (result.reason === 'not_found') return json({ error: 'Image not found' }, { status: 404 });
+    if (result.reason === 'unauthorized') return json({ error: 'Not authorized' }, { status: 403 });
   }
+
+  return json({ ok: true });
 }

@@ -15,9 +15,13 @@ src/
 ├── lib/
 │   ├── server/
 │   │   ├── bandwidth.ts          In-memory byte counter + daily reset
-│   │   ├── db.ts                 SQLite via node:sqlite (DatabaseSync)
-│   │   ├── events.ts             EventEmitter for SSE broadcast
-│   │   └── imageStore.ts         Write file + insert DB + prune + emit event
+│   │   ├── config.ts             Environment config (UPLOADS_DIR, DB_PATH)
+│   │   ├── events.ts             Typed EventEmitter for SSE broadcast
+│   │   ├── imageStore.ts         Write file + insert DB + prune + emit event
+│   │   ├── init.ts               Composition root: connect DB → migrate → create repo
+│   │   ├── migrate.ts            Schema DDL (CREATE TABLE, indexes, PRAGMAs)
+│   │   ├── repository.ts         ImageRepository interface + DeleteResult type
+│   │   └── SqliteImageRepository.ts  SQLite adapter implementing ImageRepository
 │   ├── components/
 │   │   ├── HelpPanel.svelte      How-to overlay panel
 │   │   ├── ImageLightbox.svelte  Full-screen image viewer with prev/next navigation
@@ -78,6 +82,7 @@ src/
 - Users can delete their own images from their User Gallery (self-uid only)
 - `POST /api/images/delete` validates `image.uid === uid` server-side
 - On success: `fs.unlinkSync` file + `DELETE FROM images WHERE id = ?` + `imageEvents.emit('delete_image')`
+- `deleteImageRecord()` returns `DeleteResult` discriminated union (`{ ok: true, record } | { ok: false, reason }`) instead of throwing strings; routes map `reason` directly to HTTP status codes
 - SSE `delete_image` event is dispatched; all connected clients filter out the deleted image from both waterfall and user gallery views
 - Independent of prune — both mechanisms coexist (user removes specific images; prune caps overall counts)
 
@@ -91,7 +96,8 @@ src/
 - In-memory counters: `uploadBytes` + `downloadBytes`
 - Daily reset: checked on each bandwidth operation (no polling)
 - 2GB limit: `hooks.server.ts` returns 503 for any `/api/*` route (except `/api/bandwidth`)
-- Download tracking: `hooks.server.ts` reads `content-length` on `/api/uploads/*` responses
+- Upload tracking: `hooks.server.ts` reads request `content-length` on `POST /api/upload`
+- Download tracking: `hooks.server.ts` reads response `content-length` on `/api/uploads/*`
 
 ## Key Commands
 
