@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { version } from '../../../package.json';
   let { onClose }: { onClose: () => void } = $props();
 </script>
 
@@ -18,19 +19,28 @@
   </div>
   <div class="space-y-5 text-sm text-gray-700">
     <p class="text-gray-800 leading-relaxed">
-      If you're feeling unproductive and want to put yourself under others' watch, come here — snap a photo every half hour and let others keep you accountable.
+      If you're <strong>feeling unproductive</strong> and want to put yourself <strong>under others' watch</strong>, come here — snap a photo every half hour and let others keep you <strong>accountable</strong>.
     </p>
     <div>
       <strong class="text-gray-900">Take a Photo</strong>
-      <p class="mt-1">Tap <em>Take Photo</em> to capture what you're doing right now. Images are compressed and uploaded automatically.</p>
+      <p class="mt-1">Tap <strong><em>Take Photo</em></strong> to capture what you're doing right now. Images are <strong>compressed</strong> and <strong>uploaded automatically</strong>.</p>
     </div>
     <div>
       <strong class="text-gray-900">Browse</strong>
-      <p class="mt-1">The main view shows the latest photos from everyone. Tap any photo to view it full-screen; swipe or use arrows to browse. Tap <em>View all by</em> to see that person's full gallery.</p>
+      <p class="mt-1">The main view shows the latest photos from everyone. Tap any photo to view it <strong>full-screen</strong>; <strong>swipe or use arrows</strong> to browse. Tap <strong><em>View all by</em></strong> to see that person's full gallery.</p>
     </div>
     <div>
       <strong class="text-gray-900">Delete</strong>
-      <p class="mt-1">In your own gallery, tap <b>×</b> to delete an image. Deletion syncs to all viewers in real time.</p>
+      <p class="mt-1">In your own gallery, tap <b>×</b> to delete an image. Deletion syncs to all viewers in <strong>real time</strong>.</p>
+    </div>
+  </div>
+  <hr class="my-5 border-gray-200">
+  <div class="space-y-3 text-sm text-gray-500">
+    <p>All uploaded photos are <strong>public</strong>. Do not share sensitive or private content.</p>
+    <p>This app has <strong>no authentication</strong>. Anyone with basic browser knowledge can manipulate their local identity to impersonate you. Uploaded photos <strong>cannot</strong> serve as evidence of your actions.</p>
+    <div class="flex items-center justify-between pt-1">
+      <a href="https://github.com/cup113/doings" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">GitHub</a>
+      <span>v{version}</span>
     </div>
   </div>
 </div>

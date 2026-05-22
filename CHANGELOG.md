@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2 — 2026-05-22
+
+- **HelpPanel**: add version display, privacy/security notices, GitHub link, and UI polish
+- **CSRF**: migrate from `checkOrigin: false` to `trustedOrigins: ['*']` (SvelteKit 2.57+)
+
 ## 1.0.1 — 2026-05-17
 
 - **Fix**: resolve `each_key_duplicate` Svelte error (skeleton key + SSE dedup)
