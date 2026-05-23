@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3 — 2026-05-23
+
+- **Tests**: add test suites for all components and server modules
+- **Config**: migrate to Vite 8 + Tailwind CSS v4 Vite plugin
+- **Chore**: update dependencies, remove unused files
+
 ## 1.0.2 — 2026-05-22
 
 - **HelpPanel**: add version display, privacy/security notices, GitHub link, and UI polish

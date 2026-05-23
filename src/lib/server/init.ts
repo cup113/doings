@@ -6,8 +6,12 @@ import { migrate } from './migrate';
 import type { ImageRepository } from './repository';
 import { SqliteImageRepository } from './SqliteImageRepository';
 
-mkdirSync(dirname(DB_PATH), { recursive: true });
-const db = new DatabaseSync(DB_PATH);
-migrate(db);
+export function createRepo(dbPath?: string): ImageRepository {
+  const path = dbPath ?? DB_PATH;
+  mkdirSync(dirname(path), { recursive: true });
+  const db = new DatabaseSync(path);
+  migrate(db);
+  return new SqliteImageRepository(db);
+}
 
-export const repo: ImageRepository = new SqliteImageRepository(db);
+export const repo: ImageRepository = createRepo();

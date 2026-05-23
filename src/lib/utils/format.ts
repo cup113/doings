@@ -2,8 +2,7 @@ export function parseCreatedAt(t: string): Date {
   return new Date(t.endsWith('Z') ? t : t + 'Z');
 }
 
-function isToday(date: Date): boolean {
-  const now = new Date();
+function isToday(date: Date, now: Date = new Date()): boolean {
   return (
     date.getFullYear() === now.getFullYear() &&
     date.getMonth() === now.getMonth() &&
@@ -13,7 +12,9 @@ function isToday(date: Date): boolean {
 
 export function formatRelativeTime(t: string, now?: number): string {
   const date = parseCreatedAt(t);
-  const diff = (now ?? Date.now()) - date.getTime();
+  const nowMs = now ?? Date.now();
+  const nowDate = new Date(nowMs);
+  const diff = nowMs - date.getTime();
 
   const seconds = Math.floor(diff / 1000);
   if (seconds < 10) return 'just now';
@@ -23,7 +24,7 @@ export function formatRelativeTime(t: string, now?: number): string {
   if (minutes < 60) return `${minutes}m ago`;
 
   const hours = Math.floor(minutes / 60);
-  if (hours < 24 && isToday(date)) return `${hours}h ago`;
+  if (hours < 24 && isToday(date, nowDate)) return `${hours}h ago`;
 
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');

@@ -6,7 +6,14 @@ import { UPLOADS_DIR } from './config';
 import type { ImageRecord } from '$lib/types';
 import type { DeleteResult } from './repository';
 
-export function storeImage(uid: string, buffer: Buffer): ImageRecord {
+export interface PruneLimits {
+  maxPerUser: number;
+  maxGlobal: number;
+}
+
+const DEFAULT_LIMITS: PruneLimits = { maxPerUser: 100, maxGlobal: 2000 };
+
+export function storeImage(uid: string, buffer: Buffer, limits?: PruneLimits): ImageRecord {
   const userDir = join(UPLOADS_DIR, uid);
   mkdirSync(userDir, { recursive: true });
 
@@ -16,7 +23,7 @@ export function storeImage(uid: string, buffer: Buffer): ImageRecord {
 
   const record = repo.insertImage(uid, `${uid}/${filename}`);
 
-  prune(uid);
+  prune(uid, limits ?? DEFAULT_LIMITS);
 
   imageEvents.emit('new_image', record);
 
@@ -36,9 +43,9 @@ export function deleteImageRecord(id: number, uid: string): DeleteResult {
   return { ok: true, record: img };
 }
 
-function prune(userUid: string): void {
+export function prune(userUid: string, limits: PruneLimits): void {
   let count = repo.countImages({ uid: userUid });
-  while (count > 100) {
+  while (count > limits.maxPerUser) {
     const oldest = getOldestUserImage(userUid);
     if (!oldest) break;
     try { unlinkSync(join(UPLOADS_DIR, oldest.path)); } catch { /* file may be gone */ }
@@ -47,7 +54,7 @@ function prune(userUid: string): void {
   }
 
   let total = repo.countImages({});
-  while (total > 2000) {
+  while (total > limits.maxGlobal) {
     const oldest = getOldestImage();
     if (!oldest) break;
     try { unlinkSync(join(UPLOADS_DIR, oldest.path)); } catch { /* file may be gone */ }
