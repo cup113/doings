@@ -5,11 +5,14 @@ A real-time photo-sharing app built with SvelteKit. Snap a photo, share instantl
 ## Features
 
 - Camera capture → compress to 384px WebP (0.75 quality) → upload
-- Real-time SSE feed — new photos appear instantly
-- Image lightbox with prev/next navigation
+- Real-time SSE feed — new/delete events sync to all viewers instantly
+- Image lightbox with prev/next navigation and keyboard support
+- Fetch retry (3x auto-retry) with error state and retry button
+- SSE auto-catchup — reconnects fetch missed images automatically
+- Skeleton loading placeholders while images load
 - Per-user gallery view
 - Self-delete your own images (syncs to all viewers in real time)
-- Inactivity reminders (staged, 20–30 min)
+- Inactivity reminders (staged, 20–30 min with snooze persistence)
 - Bandwidth limiter (2GB/day)
 
 ## Tech Stack
@@ -42,6 +45,7 @@ docker compose up --build
 | `UPLOADS_DIR` | `uploads` | Image storage directory |
 | `DB_PATH` | `data/doings.db` | SQLite database path |
 | `ORIGIN` | (required) | App origin URL (SvelteKit CSRF) |
+| `BODY_SIZE_LIMIT` | `1048576` (1 MB) | Max upload body size in bytes |
 
 ## Coolify Deployment (Traefik)
 
@@ -77,6 +81,7 @@ src/
 │   │   └── SqliteImageRepository.ts  SQLite adapter
 │   ├── components/
 │   │   ├── HelpPanel.svelte
+│   │   ├── ImageLightbox.svelte
 │   │   ├── InactivityWarning.svelte
 │   │   ├── RelativeTime.svelte
 │   │   ├── UploadButton.svelte

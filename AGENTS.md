@@ -90,6 +90,7 @@ src/
 
 - On first visit, `nanoid()` is generated and stored in `localStorage('doings_uid')`.
 - `localStorage('doings_last_upload')` records last upload timestamp for 30min inactivity check.
+- `localStorage('doings_snooze_until')` persists snooze expiry across page reloads (set by InactivityWarning snooze buttons).
 
 ## Bandwidth Limiter
 
@@ -118,6 +119,7 @@ Environment variables:
 - `UPLOADS_DIR` (default: `uploads`)
 - `DB_PATH` (default: `data/doings.db`)
 - `ORIGIN` — required by SvelteKit for CSRF protection
+- `BODY_SIZE_LIMIT` (default: `1048576`) — max upload body size in bytes (1 MB)
 
 ### Coolify + Traefik: SSE Fix
 
