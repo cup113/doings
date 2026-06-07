@@ -1,6 +1,9 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { EventEmitter } from 'node:events';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { join } from 'node:path';
 import type { ImageRepository } from './repository';
 import type { ImageRecord } from '$lib/types';
+import { imageEvents } from './imageStore';
 
 const mockInsertImage = vi.fn();
 const mockGetImageById = vi.fn();
@@ -17,34 +20,31 @@ const mockRepo: ImageRepository = {
   ping: vi.fn(),
 };
 
-vi.mock('./init', () => ({ repo: mockRepo }));
-
-const mockEmit = vi.fn();
-vi.mock('./events', () => ({ imageEvents: { emit: mockEmit } }));
-
 vi.mock('node:fs', () => ({
   mkdirSync: vi.fn(),
   writeFileSync: vi.fn(),
   unlinkSync: vi.fn(),
 }));
 
-import { join } from 'node:path';
-
-vi.mock('./config', () => ({ UPLOADS_DIR: '/tmp/uploads' }));
-
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe('storeImage', () => {
+afterEach(() => {
+  (imageEvents as unknown as EventEmitter).removeAllListeners();
+});
+
+describe('ImageStore', () => {
   it('creates user directory and writes file', async () => {
     const { mkdirSync, writeFileSync } = await import('node:fs');
-    const { storeImage } = await import('./imageStore');
+    const { ImageStore } = await import('./imageStore');
+
+    const store = new ImageStore(mockRepo, '/tmp/uploads');
 
     mockInsertImage.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/123456.webp', created_at: '2025-01-01T00:00:00Z' });
     mockCountImages.mockReturnValue(0);
 
-    storeImage('uid1', Buffer.from('test'));
+    store.storeImage('uid1', Buffer.from('test'));
 
     expect(mkdirSync).toHaveBeenCalledWith(join('/tmp/uploads', 'uid1'), { recursive: true });
     expect(writeFileSync).toHaveBeenCalledTimes(1);
@@ -54,99 +54,183 @@ describe('storeImage', () => {
   });
 
   it('inserts record into repo', async () => {
-    const { storeImage } = await import('./imageStore');
+    const { ImageStore } = await import('./imageStore');
+
+    const store = new ImageStore(mockRepo, '/tmp/uploads');
 
     mockInsertImage.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' });
     mockCountImages.mockReturnValue(0);
 
-    storeImage('uid1', Buffer.from('test'));
+    store.storeImage('uid1', Buffer.from('test'));
 
     expect(mockInsertImage).toHaveBeenCalledWith('uid1', expect.stringMatching(/^uid1\/\d+-[a-z0-9]+\.webp$/));
   });
 
   it('returns the created record', async () => {
-    const { storeImage } = await import('./imageStore');
+    const { ImageStore } = await import('./imageStore');
+
+    const store = new ImageStore(mockRepo, '/tmp/uploads');
 
     const record: ImageRecord = { id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' };
     mockInsertImage.mockReturnValue(record);
     mockCountImages.mockReturnValue(0);
 
-    const result = storeImage('uid1', Buffer.from('test'));
+    const result = store.storeImage('uid1', Buffer.from('test'));
     expect(result).toEqual(record);
   });
 
   it('calls prune with custom limits', async () => {
-    const { storeImage } = await import('./imageStore');
+    const { ImageStore } = await import('./imageStore');
+
+    const store = new ImageStore(mockRepo, '/tmp/uploads');
 
     mockInsertImage.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' });
     mockCountImages.mockReturnValue(0);
 
-    storeImage('uid1', Buffer.from('test'), { maxPerUser: 3, maxGlobal: 5 });
+    store.storeImage('uid1', Buffer.from('test'), { maxPerUser: 3, maxGlobal: 5 });
 
     expect(mockCountImages).toHaveBeenCalledWith({ uid: 'uid1' });
     expect(mockCountImages).toHaveBeenCalledWith({});
   });
 
   it('emits new_image event', async () => {
-    const { storeImage } = await import('./imageStore');
+    const { ImageStore } = await import('./imageStore');
+
+    const store = new ImageStore(mockRepo, '/tmp/uploads');
 
     const record: ImageRecord = { id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' };
     mockInsertImage.mockReturnValue(record);
     mockCountImages.mockReturnValue(0);
 
-    storeImage('uid1', Buffer.from('test'));
-    expect(mockEmit).toHaveBeenCalledWith('new_image', record);
-  });
-});
+    const handler = vi.fn();
+    imageEvents.on('new_image', handler);
 
-describe('deleteImageRecord', () => {
-  it('returns not_found when image missing', async () => {
-    const { deleteImageRecord } = await import('./imageStore');
-    mockGetImageById.mockReturnValue(null);
+    store.storeImage('uid1', Buffer.from('test'));
 
-    const result = deleteImageRecord(999, 'uid1');
-    expect(result).toEqual({ ok: false, reason: 'not_found' });
+    expect(handler).toHaveBeenCalledWith(record);
+
+    imageEvents.off('new_image', handler);
   });
 
-  it('returns unauthorized when uid mismatches', async () => {
-    const { deleteImageRecord } = await import('./imageStore');
-    mockGetImageById.mockReturnValue({ id: 1, uid: 'uid2', path: 'uid2/x.webp', created_at: '2025-01-01T00:00:00Z' });
+  describe('deleteImageRecord', () => {
+    it('returns not_found when image missing', async () => {
+      const { ImageStore } = await import('./imageStore');
 
-    const result = deleteImageRecord(1, 'uid1');
-    expect(result).toEqual({ ok: false, reason: 'unauthorized' });
+      const store = new ImageStore(mockRepo, '/tmp/uploads');
+
+      mockGetImageById.mockReturnValue(null);
+
+      const result = store.deleteImageRecord(999, 'uid1');
+      expect(result).toEqual({ ok: false, reason: 'not_found' });
+    });
+
+    it('returns unauthorized when uid mismatches', async () => {
+      const { ImageStore } = await import('./imageStore');
+
+      const store = new ImageStore(mockRepo, '/tmp/uploads');
+
+      mockGetImageById.mockReturnValue({ id: 1, uid: 'uid2', path: 'uid2/x.webp', created_at: '2025-01-01T00:00:00Z' });
+
+      const result = store.deleteImageRecord(1, 'uid1');
+      expect(result).toEqual({ ok: false, reason: 'unauthorized' });
+    });
+
+    it('deletes file and record on success', async () => {
+      const { unlinkSync } = await import('node:fs');
+      const { ImageStore } = await import('./imageStore');
+
+      const store = new ImageStore(mockRepo, '/tmp/uploads');
+
+      mockGetImageById.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' });
+
+      const result = store.deleteImageRecord(1, 'uid1');
+
+      expect(unlinkSync).toHaveBeenCalledWith(join('/tmp/uploads', 'uid1', 'x.webp'));
+      expect(mockDeleteImage).toHaveBeenCalledWith(1);
+      expect(result).toEqual({ ok: true, record: { id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' } });
+    });
+
+    it('emits delete_image event', async () => {
+      const { ImageStore } = await import('./imageStore');
+
+      const store = new ImageStore(mockRepo, '/tmp/uploads');
+
+      const record: ImageRecord = { id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' };
+      mockGetImageById.mockReturnValue(record);
+
+      const handler = vi.fn();
+      imageEvents.on('delete_image', handler);
+
+      store.deleteImageRecord(1, 'uid1');
+
+      expect(handler).toHaveBeenCalledWith(record);
+
+      imageEvents.off('delete_image', handler);
+    });
+
+    it('does not throw when file is already gone', async () => {
+      const { unlinkSync } = await import('node:fs');
+      const { ImageStore } = await import('./imageStore');
+
+      const store = new ImageStore(mockRepo, '/tmp/uploads');
+
+      (unlinkSync as ReturnType<typeof vi.fn>).mockImplementation(() => { throw new Error('ENOENT'); });
+      mockGetImageById.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' });
+
+      const result = store.deleteImageRecord(1, 'uid1');
+      expect(result.ok).toBe(true);
+    });
   });
 
-  it('deletes file and record on success', async () => {
-    const { unlinkSync } = await import('node:fs');
-    const { deleteImageRecord } = await import('./imageStore');
+  describe('getRecentImages', () => {
+    it('returns images from repo with defaults', async () => {
+      const { ImageStore } = await import('./imageStore');
 
-    mockGetImageById.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' });
+      const store = new ImageStore(mockRepo, '/tmp/uploads');
+      const records = [{ id: 1, uid: 'uid1', path: 'uid1/a.webp', created_at: '2025-01-01T00:00:00Z' }];
+      mockGetImages.mockReturnValue(records);
 
-    const result = deleteImageRecord(1, 'uid1');
+      const result = store.getRecentImages();
 
-    expect(unlinkSync).toHaveBeenCalledWith(join('/tmp/uploads', 'uid1/x.webp'));
-    expect(mockDeleteImage).toHaveBeenCalledWith(1);
-    expect(result).toEqual({ ok: true, record: { id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' } });
+      expect(mockGetImages).toHaveBeenCalledWith({ limit: 12, order: 'newest' });
+      expect(result).toEqual(records);
+    });
+
+    it('passes custom limit', async () => {
+      const { ImageStore } = await import('./imageStore');
+
+      const store = new ImageStore(mockRepo, '/tmp/uploads');
+      mockGetImages.mockReturnValue([]);
+
+      store.getRecentImages(5);
+
+      expect(mockGetImages).toHaveBeenCalledWith({ limit: 5, order: 'newest' });
+    });
   });
 
-  it('emits delete_image event', async () => {
-    const { deleteImageRecord } = await import('./imageStore');
+  describe('getUserImages', () => {
+    it('returns images filtered by uid', async () => {
+      const { ImageStore } = await import('./imageStore');
 
-    const record: ImageRecord = { id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' };
-    mockGetImageById.mockReturnValue(record);
+      const store = new ImageStore(mockRepo, '/tmp/uploads');
+      const records = [{ id: 1, uid: 'uid1', path: 'uid1/a.webp', created_at: '2025-01-01T00:00:00Z' }];
+      mockGetImages.mockReturnValue(records);
 
-    deleteImageRecord(1, 'uid1');
-    expect(mockEmit).toHaveBeenCalledWith('delete_image', record);
-  });
+      const result = store.getUserImages('uid1');
 
-  it('does not throw when file is already gone', async () => {
-    const { unlinkSync } = await import('node:fs');
-    const { deleteImageRecord } = await import('./imageStore');
+      expect(mockGetImages).toHaveBeenCalledWith({ uid: 'uid1', limit: 12, order: 'newest' });
+      expect(result).toEqual(records);
+    });
 
-    (unlinkSync as ReturnType<typeof vi.fn>).mockImplementation(() => { throw new Error('ENOENT'); });
-    mockGetImageById.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' });
+    it('passes custom limit', async () => {
+      const { ImageStore } = await import('./imageStore');
 
-    const result = deleteImageRecord(1, 'uid1');
-    expect(result.ok).toBe(true);
+      const store = new ImageStore(mockRepo, '/tmp/uploads');
+      mockGetImages.mockReturnValue([]);
+
+      store.getUserImages('uid1', 3);
+
+      expect(mockGetImages).toHaveBeenCalledWith({ uid: 'uid1', limit: 3, order: 'newest' });
+    });
   });
 });

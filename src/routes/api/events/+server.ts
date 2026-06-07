@@ -1,5 +1,5 @@
 import { Readable } from 'node:stream';
-import { imageEvents } from '$lib/server/events';
+import { imageEvents } from '$lib/server/imageStore';
 import type { ImageRecord } from '$lib/types';
 
 export function GET({ request }: { request: Request }) {

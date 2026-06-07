@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { storeImage } from '$lib/server/imageStore';
+import { imageStore } from '$lib/server/init';
 
 export const config = {
   body: { size: '1mb' }
@@ -15,6 +15,6 @@ export async function POST({ request }: { request: Request }) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const record = storeImage(uid, buffer);
+  const record = imageStore.storeImage(uid, buffer);
   return json(record);
 }

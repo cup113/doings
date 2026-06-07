@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { deleteImageRecord } from '$lib/server/imageStore';
+import { imageStore } from '$lib/server/init';
 
 export async function POST({ request }: { request: Request }) {
   const { id, uid } = await request.json();
@@ -8,7 +8,7 @@ export async function POST({ request }: { request: Request }) {
     return json({ error: 'Invalid id or uid' }, { status: 400 });
   }
 
-  const result = deleteImageRecord(id, uid);
+  const result = imageStore.deleteImageRecord(id, uid);
 
   if (!result.ok) {
     if (result.reason === 'not_found') return json({ error: 'Image not found' }, { status: 404 });
