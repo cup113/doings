@@ -29,9 +29,9 @@ describe('prune', () => {
     const { ImageStore } = await import('./imageStore');
     const store = new ImageStore(realRepo, '/tmp/uploads');
 
-    const first = realRepo.insertImage('uid1', 'uid1/first.webp');
+    const first = realRepo.insertImage('uid1', 'uid1/first.webp', 'lobby');
     for (let i = 0; i < 4; i++) {
-      realRepo.insertImage('uid1', `uid1/img${i}.webp`);
+      realRepo.insertImage('uid1', `uid1/img${i}.webp`, 'lobby');
     }
 
     store.prune('uid1', { maxPerUser: 3, maxGlobal: 10 });
@@ -45,7 +45,7 @@ describe('prune', () => {
     const store = new ImageStore(realRepo, '/tmp/uploads');
 
     for (let i = 0; i < 3; i++) {
-      realRepo.insertImage('uid1', `uid1/img${i}.webp`);
+      realRepo.insertImage('uid1', `uid1/img${i}.webp`, 'lobby');
     }
 
     store.prune('uid1', { maxPerUser: 3, maxGlobal: 10 });
@@ -58,7 +58,7 @@ describe('prune', () => {
     const store = new ImageStore(realRepo, '/tmp/uploads');
 
     for (let i = 0; i < 7; i++) {
-      realRepo.insertImage('uid1', `uid1/img${i}.webp`);
+      realRepo.insertImage('uid1', `uid1/img${i}.webp`, 'lobby');
     }
 
     store.prune('uid1', { maxPerUser: 3, maxGlobal: 10 });
@@ -70,9 +70,9 @@ describe('prune', () => {
     const { ImageStore } = await import('./imageStore');
     const store = new ImageStore(realRepo, '/tmp/uploads');
 
-    const first = realRepo.insertImage('uid1', 'uid1/first.webp');
+    const first = realRepo.insertImage('uid1', 'uid1/first.webp', 'lobby');
     for (let i = 0; i < 4; i++) {
-      realRepo.insertImage('uid2', `uid2/img${i}.webp`);
+      realRepo.insertImage('uid2', `uid2/img${i}.webp`, 'lobby');
     }
 
     store.prune('uid1', { maxPerUser: 10, maxGlobal: 3 });
@@ -86,10 +86,10 @@ describe('prune', () => {
     const store = new ImageStore(realRepo, '/tmp/uploads');
 
     for (let i = 0; i < 6; i++) {
-      realRepo.insertImage('uid1', `uid1/img${i}.webp`);
+      realRepo.insertImage('uid1', `uid1/img${i}.webp`, 'lobby');
     }
     for (let i = 0; i < 3; i++) {
-      realRepo.insertImage('uid2', `uid2/img${i}.webp`);
+      realRepo.insertImage('uid2', `uid2/img${i}.webp`, 'lobby');
     }
 
     store.prune('uid1', { maxPerUser: 3, maxGlobal: 5 });
@@ -102,8 +102,8 @@ describe('prune', () => {
     const { ImageStore } = await import('./imageStore');
     const store = new ImageStore(realRepo, '/tmp/uploads');
 
-    realRepo.insertImage('uid1', 'uid1/a.webp');
-    realRepo.insertImage('uid2', 'uid2/b.webp');
+    realRepo.insertImage('uid1', 'uid1/a.webp', 'lobby');
+    realRepo.insertImage('uid2', 'uid2/b.webp', 'lobby');
 
     store.prune('uid1', { maxPerUser: 3, maxGlobal: 5 });
 

@@ -2,7 +2,8 @@ import { Readable } from 'node:stream';
 import { imageEvents } from '$lib/server/imageStore';
 import type { ImageRecord } from '$lib/types';
 
-export function GET({ request }: { request: Request }) {
+export function GET({ request, url }: { request: Request; url: URL }) {
+  const room = url.searchParams.get('room') || 'lobby';
   let closed = false;
 
   const nodeStream = new Readable({
@@ -10,13 +11,13 @@ export function GET({ request }: { request: Request }) {
   });
 
   const newImageListener = (event: ImageRecord) => {
-    if (!closed) {
+    if (!closed && event.room === room) {
       nodeStream.push(`event: new_image\ndata: ${JSON.stringify(event)}\n\n`);
     }
   };
 
   const deleteImageListener = (event: ImageRecord) => {
-    if (!closed) {
+    if (!closed && event.room === room) {
       nodeStream.push(`event: delete_image\ndata: ${JSON.stringify(event)}\n\n`);
     }
   };

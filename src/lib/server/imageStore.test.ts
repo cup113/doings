@@ -41,10 +41,10 @@ describe('ImageStore', () => {
 
     const store = new ImageStore(mockRepo, '/tmp/uploads');
 
-    mockInsertImage.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/123456.webp', created_at: '2025-01-01T00:00:00Z' });
+    mockInsertImage.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/123456.webp', room: 'lobby', created_at: '2025-01-01T00:00:00Z' });
     mockCountImages.mockReturnValue(0);
 
-    store.storeImage('uid1', Buffer.from('test'));
+    store.storeImage('uid1', 'lobby', Buffer.from('test'));
 
     expect(mkdirSync).toHaveBeenCalledWith(join('/tmp/uploads', 'uid1'), { recursive: true });
     expect(writeFileSync).toHaveBeenCalledTimes(1);
@@ -58,12 +58,12 @@ describe('ImageStore', () => {
 
     const store = new ImageStore(mockRepo, '/tmp/uploads');
 
-    mockInsertImage.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' });
+    mockInsertImage.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/x.webp', room: 'lobby', created_at: '2025-01-01T00:00:00Z' });
     mockCountImages.mockReturnValue(0);
 
-    store.storeImage('uid1', Buffer.from('test'));
+    store.storeImage('uid1', 'lobby', Buffer.from('test'));
 
-    expect(mockInsertImage).toHaveBeenCalledWith('uid1', expect.stringMatching(/^uid1\/\d+-[a-z0-9]+\.webp$/));
+    expect(mockInsertImage).toHaveBeenCalledWith('uid1', expect.stringMatching(/^uid1\/\d+-[a-z0-9]+\.webp$/), 'lobby');
   });
 
   it('returns the created record', async () => {
@@ -71,11 +71,11 @@ describe('ImageStore', () => {
 
     const store = new ImageStore(mockRepo, '/tmp/uploads');
 
-    const record: ImageRecord = { id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' };
+    const record: ImageRecord = { id: 1, uid: 'uid1', path: 'uid1/x.webp', room: 'lobby', created_at: '2025-01-01T00:00:00Z' };
     mockInsertImage.mockReturnValue(record);
     mockCountImages.mockReturnValue(0);
 
-    const result = store.storeImage('uid1', Buffer.from('test'));
+    const result = store.storeImage('uid1', 'lobby', Buffer.from('test'));
     expect(result).toEqual(record);
   });
 
@@ -84,13 +84,13 @@ describe('ImageStore', () => {
 
     const store = new ImageStore(mockRepo, '/tmp/uploads');
 
-    mockInsertImage.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' });
+    mockInsertImage.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/x.webp', room: 'lobby', created_at: '2025-01-01T00:00:00Z' });
     mockCountImages.mockReturnValue(0);
 
-    store.storeImage('uid1', Buffer.from('test'), { maxPerUser: 3, maxGlobal: 5 });
+    store.storeImage('uid1', 'lobby', Buffer.from('test'), { maxPerUser: 3, maxGlobal: 5 });
 
-    expect(mockCountImages).toHaveBeenCalledWith({ uid: 'uid1' });
-    expect(mockCountImages).toHaveBeenCalledWith({});
+    expect(mockCountImages).toHaveBeenCalledWith({ room: '', uid: 'uid1' });
+    expect(mockCountImages).toHaveBeenCalledWith({ room: '' });
   });
 
   it('emits new_image event', async () => {
@@ -98,14 +98,14 @@ describe('ImageStore', () => {
 
     const store = new ImageStore(mockRepo, '/tmp/uploads');
 
-    const record: ImageRecord = { id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' };
+    const record: ImageRecord = { id: 1, uid: 'uid1', path: 'uid1/x.webp', room: 'lobby', created_at: '2025-01-01T00:00:00Z' };
     mockInsertImage.mockReturnValue(record);
     mockCountImages.mockReturnValue(0);
 
     const handler = vi.fn();
     imageEvents.on('new_image', handler);
 
-    store.storeImage('uid1', Buffer.from('test'));
+    store.storeImage('uid1', 'lobby', Buffer.from('test'));
 
     expect(handler).toHaveBeenCalledWith(record);
 
@@ -129,7 +129,7 @@ describe('ImageStore', () => {
 
       const store = new ImageStore(mockRepo, '/tmp/uploads');
 
-      mockGetImageById.mockReturnValue({ id: 1, uid: 'uid2', path: 'uid2/x.webp', created_at: '2025-01-01T00:00:00Z' });
+      mockGetImageById.mockReturnValue({ id: 1, uid: 'uid2', path: 'uid2/x.webp', room: 'lobby', created_at: '2025-01-01T00:00:00Z' });
 
       const result = store.deleteImageRecord(1, 'uid1');
       expect(result).toEqual({ ok: false, reason: 'unauthorized' });
@@ -141,13 +141,13 @@ describe('ImageStore', () => {
 
       const store = new ImageStore(mockRepo, '/tmp/uploads');
 
-      mockGetImageById.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' });
+      mockGetImageById.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/x.webp', room: 'lobby', created_at: '2025-01-01T00:00:00Z' });
 
       const result = store.deleteImageRecord(1, 'uid1');
 
       expect(unlinkSync).toHaveBeenCalledWith(join('/tmp/uploads', 'uid1', 'x.webp'));
       expect(mockDeleteImage).toHaveBeenCalledWith(1);
-      expect(result).toEqual({ ok: true, record: { id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' } });
+      expect(result).toEqual({ ok: true, record: { id: 1, uid: 'uid1', path: 'uid1/x.webp', room: 'lobby', created_at: '2025-01-01T00:00:00Z' } });
     });
 
     it('emits delete_image event', async () => {
@@ -155,7 +155,7 @@ describe('ImageStore', () => {
 
       const store = new ImageStore(mockRepo, '/tmp/uploads');
 
-      const record: ImageRecord = { id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' };
+      const record: ImageRecord = { id: 1, uid: 'uid1', path: 'uid1/x.webp', room: 'lobby', created_at: '2025-01-01T00:00:00Z' };
       mockGetImageById.mockReturnValue(record);
 
       const handler = vi.fn();
@@ -175,7 +175,7 @@ describe('ImageStore', () => {
       const store = new ImageStore(mockRepo, '/tmp/uploads');
 
       (unlinkSync as ReturnType<typeof vi.fn>).mockImplementation(() => { throw new Error('ENOENT'); });
-      mockGetImageById.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/x.webp', created_at: '2025-01-01T00:00:00Z' });
+      mockGetImageById.mockReturnValue({ id: 1, uid: 'uid1', path: 'uid1/x.webp', room: 'lobby', created_at: '2025-01-01T00:00:00Z' });
 
       const result = store.deleteImageRecord(1, 'uid1');
       expect(result.ok).toBe(true);
@@ -187,12 +187,12 @@ describe('ImageStore', () => {
       const { ImageStore } = await import('./imageStore');
 
       const store = new ImageStore(mockRepo, '/tmp/uploads');
-      const records = [{ id: 1, uid: 'uid1', path: 'uid1/a.webp', created_at: '2025-01-01T00:00:00Z' }];
+      const records = [{ id: 1, uid: 'uid1', path: 'uid1/a.webp', room: 'lobby', created_at: '2025-01-01T00:00:00Z' }];
       mockGetImages.mockReturnValue(records);
 
-      const result = store.getRecentImages();
+      const result = store.getRecentImages('lobby');
 
-      expect(mockGetImages).toHaveBeenCalledWith({ limit: 12, order: 'newest' });
+      expect(mockGetImages).toHaveBeenCalledWith({ room: 'lobby', limit: 12, order: 'newest' });
       expect(result).toEqual(records);
     });
 
@@ -202,9 +202,9 @@ describe('ImageStore', () => {
       const store = new ImageStore(mockRepo, '/tmp/uploads');
       mockGetImages.mockReturnValue([]);
 
-      store.getRecentImages(5);
+      store.getRecentImages('lobby', 5);
 
-      expect(mockGetImages).toHaveBeenCalledWith({ limit: 5, order: 'newest' });
+      expect(mockGetImages).toHaveBeenCalledWith({ room: 'lobby', limit: 5, order: 'newest' });
     });
   });
 
@@ -213,12 +213,12 @@ describe('ImageStore', () => {
       const { ImageStore } = await import('./imageStore');
 
       const store = new ImageStore(mockRepo, '/tmp/uploads');
-      const records = [{ id: 1, uid: 'uid1', path: 'uid1/a.webp', created_at: '2025-01-01T00:00:00Z' }];
+      const records = [{ id: 1, uid: 'uid1', path: 'uid1/a.webp', room: 'lobby', created_at: '2025-01-01T00:00:00Z' }];
       mockGetImages.mockReturnValue(records);
 
-      const result = store.getUserImages('uid1');
+      const result = store.getUserImages('uid1', 'lobby');
 
-      expect(mockGetImages).toHaveBeenCalledWith({ uid: 'uid1', limit: 12, order: 'newest' });
+      expect(mockGetImages).toHaveBeenCalledWith({ uid: 'uid1', room: 'lobby', limit: 12, order: 'newest' });
       expect(result).toEqual(records);
     });
 
@@ -228,9 +228,9 @@ describe('ImageStore', () => {
       const store = new ImageStore(mockRepo, '/tmp/uploads');
       mockGetImages.mockReturnValue([]);
 
-      store.getUserImages('uid1', 3);
+      store.getUserImages('uid1', 'lobby', 3);
 
-      expect(mockGetImages).toHaveBeenCalledWith({ uid: 'uid1', limit: 3, order: 'newest' });
+      expect(mockGetImages).toHaveBeenCalledWith({ uid: 'uid1', room: 'lobby', limit: 3, order: 'newest' });
     });
   });
 });

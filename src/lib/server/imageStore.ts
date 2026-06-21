@@ -28,15 +28,15 @@ export class ImageStore {
     private uploadsDir: string
   ) {}
 
-  getRecentImages(limit = 12): ImageRecord[] {
-    return this.repo.getImages({ limit, order: 'newest' });
+  getRecentImages(room: string, limit = 12): ImageRecord[] {
+    return this.repo.getImages({ room, limit, order: 'newest' });
   }
 
-  getUserImages(uid: string, limit = 12): ImageRecord[] {
-    return this.repo.getImages({ uid, limit, order: 'newest' });
+  getUserImages(uid: string, room: string, limit = 12): ImageRecord[] {
+    return this.repo.getImages({ uid, room, limit, order: 'newest' });
   }
 
-  storeImage(uid: string, buffer: Buffer, limits: PruneLimits = DEFAULT_LIMITS): ImageRecord {
+  storeImage(uid: string, room: string, buffer: Buffer, limits: PruneLimits = DEFAULT_LIMITS): ImageRecord {
     const userDir = join(this.uploadsDir, uid);
     mkdirSync(userDir, { recursive: true });
 
@@ -44,7 +44,7 @@ export class ImageStore {
     const filePath = join(userDir, filename);
     writeFileSync(filePath, buffer);
 
-    const record = this.repo.insertImage(uid, `${uid}/${filename}`);
+    const record = this.repo.insertImage(uid, `${uid}/${filename}`, room);
 
     this.prune(uid, limits);
 
@@ -67,7 +67,7 @@ export class ImageStore {
   }
 
   prune(userUid: string, limits: PruneLimits): void {
-    let count = this.repo.countImages({ uid: userUid });
+    let count = this.repo.countImages({ room: '', uid: userUid });
     while (count > limits.maxPerUser) {
       const oldest = this.getOldestUserImage(userUid);
       if (!oldest) break;
@@ -76,7 +76,7 @@ export class ImageStore {
       count--;
     }
 
-    let total = this.repo.countImages({});
+    let total = this.repo.countImages({ room: '' });
     while (total > limits.maxGlobal) {
       const oldest = this.getOldestImage();
       if (!oldest) break;
@@ -87,10 +87,10 @@ export class ImageStore {
   }
 
   private getOldestImage(): ImageRecord | null {
-    return this.repo.getImages({ order: 'oldest', limit: 1 })[0] ?? null;
+    return this.repo.getImages({ room: '', order: 'oldest', limit: 1 })[0] ?? null;
   }
 
   private getOldestUserImage(uid: string): ImageRecord | null {
-    return this.repo.getImages({ uid, order: 'oldest', limit: 1 })[0] ?? null;
+    return this.repo.getImages({ uid, room: '', order: 'oldest', limit: 1 })[0] ?? null;
   }
 }

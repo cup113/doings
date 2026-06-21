@@ -2,6 +2,8 @@
   import { compressImage } from '$lib/utils/compress';
   import { uploadImage } from '$lib/utils/api';
 
+  let { room }: { room: string } = $props();
+
   let inputEl = $state<HTMLInputElement>();
   let uploading = $state(false);
   let done = $state(false);
@@ -19,7 +21,7 @@
     try {
       const compressed = await compressImage(file);
       const uid = localStorage.getItem('doings_uid')!;
-      await uploadImage(compressed, uid);
+      await uploadImage(compressed, uid, room);
       localStorage.setItem('doings_last_upload', Date.now().toString());
     } catch (e) {
       error = e instanceof Error ? e.message : 'Upload failed';

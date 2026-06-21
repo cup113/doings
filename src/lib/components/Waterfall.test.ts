@@ -15,8 +15,8 @@ vi.mock('$lib/stores/app', () => ({
 }));
 
 const mockImages: ImageRecord[] = [
-  { id: 1, uid: 'user-aaa', path: 'user-aaa/img1.webp', created_at: '2025-01-01T12:00:00Z' },
-  { id: 2, uid: 'user-bbb', path: 'user-bbb/img2.webp', created_at: '2025-01-01T13:00:00Z' },
+  { id: 1, uid: 'user-aaa', path: 'user-aaa/img1.webp', room: 'lobby', created_at: '2025-01-01T12:00:00Z' },
+  { id: 2, uid: 'user-bbb', path: 'user-bbb/img2.webp', room: 'lobby', created_at: '2025-01-01T13:00:00Z' },
 ];
 
 describe('Waterfall', () => {
@@ -28,7 +28,7 @@ describe('Waterfall', () => {
 
   it('marks current user images as You', () => {
     const mixed = [
-      { id: 3, uid: 'test-uid-abc', path: 'test-uid-abc/img.webp', created_at: '2025-01-01T14:00:00Z' },
+      { id: 3, uid: 'test-uid-abc', path: 'test-uid-abc/img.webp', room: 'lobby', created_at: '2025-01-01T14:00:00Z' },
       ...mockImages,
     ];
     render(Waterfall, { props: { images: mixed, onImageClick: vi.fn() } });

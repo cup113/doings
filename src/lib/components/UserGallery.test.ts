@@ -19,8 +19,8 @@ vi.mock('$lib/utils/api', () => ({
 }));
 
 const mockImages: ImageRecord[] = [
-  { id: 1, uid: 'test-uid-abc', path: 'test-uid-abc/img1.webp', created_at: '2025-01-01T12:00:00Z' },
-  { id: 2, uid: 'user-bbb', path: 'user-bbb/img2.webp', created_at: '2025-01-01T13:00:00Z' },
+  { id: 1, uid: 'test-uid-abc', path: 'test-uid-abc/img1.webp', room: 'lobby', created_at: '2025-01-01T12:00:00Z' },
+  { id: 2, uid: 'user-bbb', path: 'user-bbb/img2.webp', room: 'lobby', created_at: '2025-01-01T13:00:00Z' },
 ];
 
 describe('UserGallery', () => {
