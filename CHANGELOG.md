@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.0 — 2026-06-21
+
+- **Rooms**: add room isolation (`/room/:id`), each a separate space with SSE filtering, room creation UI, public/private toggle
+- **ImageStore**: refactor to class with injected repository, absorb events, higher-level read methods
+- **CSRF**: nest inside `kit` config
+- **Fix**: Public Room switch knob alignment
+- **Docs**: sync ADR 0002, README, AGENTS.md with codebase
+
 ## 1.0.3 — 2026-05-23
 
 - **Tests**: add test suites for all components and server modules
