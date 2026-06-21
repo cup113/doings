@@ -6,10 +6,36 @@
   import RoomSelector from '$lib/components/RoomSelector.svelte';
   import HelpPanel from '$lib/components/HelpPanel.svelte';
   import { page } from '$app/stores';
+  import { compressImage } from '$lib/utils/compress';
+  import { uploadImage } from '$lib/utils/api';
+  import { extractImagesFromClipboard, processPasteQueue, type PasteStatus } from '$lib/utils/paste';
 
   let { children } = $props();
   let showHelp = $state(false);
   let roomId = $derived($page.params.roomId ?? 'lobby');
+  let pasteStatus = $state<PasteStatus>({ type: 'idle' });
+
+  $effect(() => {
+    const r = roomId;
+
+    function handlePaste(e: ClipboardEvent) {
+      const files = extractImagesFromClipboard(e);
+      if (files.length === 0) return;
+      e.preventDefault();
+
+      processPasteQueue(files, r, {
+        compressImage,
+        uploadImage,
+        confirm: (msg) => confirm(msg),
+        getUid: () => localStorage.getItem('doings_uid')!,
+        recordLastUpload: () => localStorage.setItem('doings_last_upload', Date.now().toString()),
+        onStatusChange: (s) => { pasteStatus = s; },
+      });
+    }
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  });
 </script>
 
 <svelte:head>
@@ -32,7 +58,16 @@
       </div>
       <div class="flex items-center gap-3">
         <span class="text-xs text-gray-400">You: {shortUid}</span>
-        <UploadButton room={roomId} />
+        <div class="flex items-center gap-2">
+          <UploadButton room={roomId} />
+          {#if pasteStatus.type === 'uploading'}
+            <span class="text-xs text-blue-600 whitespace-nowrap">Pasting {pasteStatus.index}/{pasteStatus.total}...</span>
+          {:else if pasteStatus.type === 'done'}
+            <span class="text-xs text-green-600 whitespace-nowrap animate-fadeIn">✓ Pasted {pasteStatus.index}</span>
+          {:else if pasteStatus.type === 'error'}
+            <span class="text-xs text-red-600 whitespace-nowrap">{pasteStatus.message}</span>
+          {/if}
+        </div>
       </div>
     </div>
   </header>
