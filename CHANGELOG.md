@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1 — 2026-06-21
+
+- **Paste**: add clipboard paste upload for images with confirm-each queue
+- **Layout**: wire paste handler in root layout with status indicator
+
 ## 2.0.0 — 2026-06-21
 
 - **Rooms**: add room isolation (`/room/:id`), each a separate space with SSE filtering, room creation UI, public/private toggle
