@@ -167,9 +167,9 @@
           aria-label="Toggle room visibility"
         >
           <span
-            class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"
-            class:translate-x-5={isPublic}
-            class:translate-x-0.5={!isPublic}
+            class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-[left]"
+            class:left-[22px]={isPublic}
+            class:left-0.5={!isPublic}
           ></span>
         </button>
       </div>
