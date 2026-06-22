@@ -23,15 +23,18 @@ src/
 │   │   ├── repository.ts         ImageRepository interface + DeleteResult type
 │   │   └── SqliteImageRepository.ts  SQLite adapter implementing ImageRepository
 │   ├── components/
+│   │   ├── Header.svelte         Sticky header: logo, help, room selector, upload
 │   │   ├── HelpPanel.svelte      How-to overlay panel
 │   │   ├── ImageLightbox.svelte  Full-screen image viewer with prev/next navigation
 │   │   ├── InactivityWarning.svelte  30min idle → red overlay + Notification API
+│   │   ├── PasteMonitor.svelte   Clipboard paste listener → processPasteQueue → store
 │   │   ├── RelativeTime.svelte   Live-updating relative timestamp
 │   │   ├── UploadButton.svelte   Camera → compress (384px, 0.75 WebP) → upload
 │   │   ├── UserGallery.svelte    Single user's latest 12 images
 │   │   └── Waterfall.svelte      Grid of all users' latest 12 images
 │   ├── stores/
-│   │   └── app.ts                currentUid, shortUid, viewingUser store
+│   │   ├── app.ts                currentUid, viewingUser store
+│   │   └── paste.ts              pasteStatus store (writable, PasteStatus)
 │   ├── utils/
 │   │   ├── api.ts                Typed fetch wrappers for all endpoints
 │   │   ├── compress.ts           Browser Canvas API resize + WebP encode

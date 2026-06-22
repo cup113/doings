@@ -39,13 +39,13 @@ describe('UploadButton', () => {
     screen.getByText('Uploading...');
   });
 
-  it('shows error message on failure', async () => {
+  it('returns to idle state on failure', async () => {
     mockCompress.mockRejectedValue(new Error('Camera error'));
     render(UploadButton);
     const input = document.querySelector('input[type="file"]')!;
     await fireEvent.change(input, { target: { files: [new File(['test'], 'photo.jpg', { type: 'image/jpeg' })] } });
     await vi.waitFor(() => {
-      screen.getByText('Camera error');
+      screen.getByText('Take Photo');
     });
   });
 

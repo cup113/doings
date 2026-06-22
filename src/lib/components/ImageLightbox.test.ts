@@ -10,7 +10,6 @@ afterEach(cleanup);
 
 vi.mock('$lib/stores/app', () => ({
   currentUid: 'test-uid-abc',
-  shortUid: 'tes',
   viewingUser: { subscribe: vi.fn() }
 }));
 

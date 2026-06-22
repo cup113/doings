@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.2 — 2026-06-22
+
+- **Header**: extract inline header into self-contained `Header.svelte` component
+- **Paste**: extract paste listener into `PasteMonitor.svelte`, move paste status to writable store
+- **Upload**: merge paste progress into UploadButton button text (local states > paste states > idle)
+- **Title**: dynamic page title (`Doings — #roomId`) for non-lobby rooms; clicking "Doings" navigates to `/room/lobby`
+- **Cleanup**: remove "You: {shortUid}" display and `shortUid` export from store
+
 ## 2.0.1 — 2026-06-21
 
 - **Paste**: add clipboard paste upload for images with confirm-each queue
